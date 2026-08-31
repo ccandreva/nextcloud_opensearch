@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 
 use OCA\FullTextSearch_OpenSearch\AppInfo\Application;
-use OCA\FullTextSearch_OpenSearch\Service\ConfigService;
+use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCP\Util;
 
 // Asset constants
@@ -66,7 +66,7 @@ addAssets(Application::APP_NAME);
                 <em><?php p($l->t('Include your credential in case authentication is required.')); ?></em>
             </div>
             <div class="div-table-col">
-                <input type="text" id="<?php echo ConfigService::OPENSEARCH_HOST; ?>" placeholder="<?php p(PLACEHOLDER_HOST) ?>"/>
+                <input type="text" id="<?php echo ConfigLexicon::OPENSEARCH_HOST; ?>" placeholder="<?php p(PLACEHOLDER_HOST) ?>"/>
             </div>
         </div>
 
@@ -77,7 +77,7 @@ addAssets(Application::APP_NAME);
                 <em><?php p($l->t('Name of your index.')); ?></em>
             </div>
             <div class="div-table-col">
-                <input type="text" id="<?php echo ConfigService::OPENSEARCH_INDEX; ?>" placeholder="<?php p(PLACEHOLDER_INDEX) ?>"/>
+                <input type="text" id="<?php echo ConfigLexicon::OPENSEARCH_INDEX; ?>" placeholder="<?php p(PLACEHOLDER_INDEX) ?>"/>
             </div>
         </div>
 
@@ -88,7 +88,7 @@ addAssets(Application::APP_NAME);
                 <em><?php p($l->t('Some language might needs a specific tokenizer.')); ?></em>
             </div>
             <div class="div-table-col">
-                <input type="text" id="<?php echo ConfigService::ANALYZER_TOKENIZER; ?>"/>
+                <input type="text" id="<?php echo ConfigLexicon::ANALYZER_TOKENIZER; ?>"/>
             </div>
         </div>
 

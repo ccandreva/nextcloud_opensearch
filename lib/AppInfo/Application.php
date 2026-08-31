@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\FullTextSearch_OpenSearch\AppInfo;
 
+use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -55,6 +56,7 @@ class Application extends App implements IBootstrap {
      * @return void
      */
 	final public function register(IRegistrationContext $context): void {
+		$context->registerConfigLexicon(ConfigLexicon::class);
 	}
 
     /**
