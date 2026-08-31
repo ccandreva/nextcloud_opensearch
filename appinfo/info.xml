@@ -10,7 +10,7 @@ Extension to the _Full text search_ app to communicate with OpenSearch.
 
 ]]>
 	</description>
-	<version>31.0.0-dev.0</version>
+	<version>35.0.0-dev.0</version>
 	<licence>agpl</licence>
 	<author>Armin Felder (forked from Maxence Lange)</author>
 	<namespace>FullTextSearch_OpenSearch</namespace>
@@ -20,10 +20,10 @@ Extension to the _Full text search_ app to communicate with OpenSearch.
 	<category>search</category>
 	<website>https://github.com/fairkom/nextcloud_opensearch</website>
 	<bugs>https://github.com/fairkom/nextcloud_opensearch/issues</bugs>
-	<repository>https://github.com/nextcloud/FullTextSearch_OpenSearch.git</repository>
+	<repository>https://github.com/ccandreva/nextcloud_opensearch.git</repository>
 	<screenshot>https://raw.githubusercontent.com/fairkom/nextcloud_opensearch/master/screenshots/0.3.0.png</screenshot>
 	<dependencies>
-		<nextcloud min-version="30" max-version="31"/>
+		<nextcloud min-version="35" max-version="35"/>
 	</dependencies>
 
 	<commands>

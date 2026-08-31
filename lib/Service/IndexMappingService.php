@@ -29,10 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\FullTextSearch_OpenSearch\Service;
 
+use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCA\FullTextSearch_OpenSearch\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ConfigurationException;
 use OCA\FullTextSearch_OpenSearch\Vendor\Http\Client\Exception;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\FullTextSearch\Model\IIndexDocument;
 
 /**
@@ -50,6 +52,7 @@ class IndexMappingService {
      * @return void
      */
     public function __construct(
+		private IAppConfig $appConfig,
         /**
          *
          */ private ConfigService $configService,
@@ -208,9 +211,7 @@ class IndexMappingService {
 
 		$params['body'] = [
 			'settings' => [
-				'index.mapping.total_fields.limit' => $this->configService->getAppValue(
-					ConfigService::FIELDS_LIMIT
-				),
+				'index.mapping.total_fields.limit' => $this->appConfig->getAppValueInt(ConfigLexicon::FIELDS_LIMIT),
 				'analysis' => [
 					'filter' => [
 						'shingle' => [
@@ -232,9 +233,7 @@ class IndexMappingService {
 					'analyzer' => [
 						'analyzer' => [
 							'type' => 'custom',
-							'tokenizer' => $this->configService->getAppValue(
-								ConfigService::ANALYZER_TOKENIZER
-							),
+							'tokenizer' => $this->appConfig->getAppValueString(ConfigLexicon::ANALYZER_TOKENIZER),
 							'filter' => ['lowercase', 'stop', 'kstem']
 						]
 					]
