@@ -33,6 +33,7 @@ namespace OCA\FullTextSearch_OpenSearch\Platform;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCA\FullTextSearch_OpenSearch\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ClientException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ConfigurationException;
@@ -42,6 +43,7 @@ use OCA\FullTextSearch_OpenSearch\Service\SearchService;
 use OCA\FullTextSearch_OpenSearch\Tools\Traits\TArrayTools;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\ClientBuilder;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
 use OCP\FullTextSearch\Model\IDocumentAccess;
 use OCP\FullTextSearch\Model\IIndex;
@@ -66,6 +68,7 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 	private ?IRunner $runner = null;
 
 	public function __construct(
+		private IAppConfig $appConfig,
 		private ConfigService $configService,
 		private IndexService $indexService,
 		private SearchService $searchService,
@@ -395,11 +398,11 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 			->setHosts($hosts)
 			->setRetries(3);
 
-		if ($this->configService->getAppValueBool(ConfigService::OPENSEARCH_LOGGER_ENABLED)) {
+		if ($this->appConfig->getAppValueBool(ConfigLexicon::OPENSEARCH_LOGGER_ENABLED)) {
 			$cb->setLogger($this->logger);
 		}
 
-		$cb->setSSLVerification(!$this->configService->getAppValueBool(ConfigService::ALLOW_SELF_SIGNED_CERT));
+		$cb->setSSLVerification(!$this->appConfig->getAppValueBool(ConfigLexicon::ALLOW_SELF_SIGNED_CERT));
 		$this->configureAuthentication($cb, $hosts);
 
 		$this->client = $cb->build();

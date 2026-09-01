@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\FullTextSearch_OpenSearch\Controller;
 
-use Exception;
 use OCA\FullTextSearch_OpenSearch\AppInfo\Application;
 use OCA\FullTextSearch_OpenSearch\Service\ConfigService;
 use OCP\AppFramework\Controller;

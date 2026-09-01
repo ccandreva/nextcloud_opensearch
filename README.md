@@ -2,7 +2,13 @@
 
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/nextcloud/FullTextSearch_OpenSearch/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/nextcloud/FullTextSearch_OpenSearch/?branch=master)
 
-_nextcloud - OpenSearch_ is an extension to the _Full text search_ framework. It allows you to index your content with an OpenSearch platform. It is a fork of the https://github.com/nextcloud/fulltextsearch_elasticsearch app to allow connecting to an OpenSearch engine. 
+_nextcloud - OpenSearch_ is an extension to the _Full text search_
+framework.  It allows you to index your content with an OpenSearch platform. 
+It is a fork of the
+https://github.com/nextcloud/fulltextsearch_elasticsearch app to allow
+connecting to an OpenSearch engine. This project is a fork of the original 
+https://github.com/fairkom/nextcloud_opensearch app to pick up work where
+the author left off.
 
 ## Compatibility
 
