@@ -32,7 +32,7 @@ namespace OCA\FullTextSearch_OpenSearch\Service;
 use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCA\FullTextSearch_OpenSearch\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ConfigurationException;
-use OCA\FullTextSearch_OpenSearch\Vendor\Http\Client\Exception;
+use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Common\Exceptions\Missing404Exception;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
 use OCP\AppFramework\Services\IAppConfig;
 use OCP\FullTextSearch\Model\IIndexDocument;
@@ -108,7 +108,7 @@ class IndexMappingService {
 			$result = $client->update($index['index']);
 
 			return $result;
-		} catch (Exception $e) {
+		} catch (Missing404Exception) {
 			return $this->indexDocumentNew($client, $document);
 		}
 	}
@@ -133,7 +133,8 @@ class IndexMappingService {
 
 		try {
 			$client->delete($index['index']);
-		} catch (Exception $e) {
+		} catch (Missing404Exception) {
+			// The document is already absent.
 		}
 	}
 
