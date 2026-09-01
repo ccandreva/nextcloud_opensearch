@@ -10,7 +10,7 @@ Extension to the _Full text search_ app to communicate with OpenSearch.
 
 ]]>
 	</description>
-	<version>35.0.0-dev.0</version>
+	<version>34.0.0-dev.0</version>
 	<licence>agpl</licence>
 	<author>Armin Felder (forked from Maxence Lange)</author>
 	<namespace>FullTextSearch_OpenSearch</namespace>
