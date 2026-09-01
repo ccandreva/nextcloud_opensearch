@@ -2,7 +2,7 @@
   "name": "fairkom/fulltextsearch_opensearch",
   "description": "FullTextSearch_OpenSearch",
   "minimum-stability": "stable",
-  "license": "agpl",
+  "license": "AGPL-3.0-only",
   "config": {
     "optimize-autoloader": true,
     "classmap-authoritative": true,
