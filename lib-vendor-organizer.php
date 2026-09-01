@@ -50,7 +50,7 @@ foreach ($projectList as $projectDir) {
 		if ($stripNamespacePrefix !== '' && str_starts_with($namespace, $stripNamespacePrefix)) {
 			$namespace = str_replace($stripNamespacePrefix, '', $namespace);
 		}
-		$destination = rtrim($sourceDirectory, '/') . str_replace('\\', '/', $namespace);
+		$destination = rtrim($sourceDirectory, '/') . '/' . str_replace('\\', '/', $namespace);
         $destinations = insertion_sort($destinations, [
                 "destination"=>$destination,
                 "codeDir"=>$codeDir,
