@@ -32,7 +32,7 @@ namespace OCA\FullTextSearch_OpenSearch\Service;
 use OCA\FullTextSearch_OpenSearch\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ConfigurationException;
 use OCA\FullTextSearch_OpenSearch\Tools\Traits\TArrayTools;
-use OCA\FullTextSearch_OpenSearch\Vendor\Http\Client\Exception;
+use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Common\Exceptions\Missing404Exception;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IIndexDocument;
@@ -84,30 +84,16 @@ class IndexService {
      * @return void
      */
 	final public function initializeIndex(Client $client): void {
-		try {
-			if ($client->indices()
-				->exists($this->indexMappingService->generateGlobalMap(false))) {
-				return;
-			}
-		} catch (Exception $e) {
-			$this->logger->warning($e->getMessage(), ['exception' => $e]);
+		if ($client->indices()
+			->exists($this->indexMappingService->generateGlobalMap(false))) {
+			return;
 		}
 
-		try {
-			$client->indices()
-				->create($this->indexMappingService->generateGlobalMap());
-		} catch (Exception $e) {
-			$this->logger->notice('reset index all', ['exception' => $e]);
-			$this->resetIndexAll($client);
-		}
+		$client->indices()
+			->create($this->indexMappingService->generateGlobalMap());
 
-		try {
-			$client->ingest()
-				->putPipeline($this->indexMappingService->generateGlobalIngest());
-		} catch (Exception $e) {
-			$this->logger->notice('reset index all', ['exception' => $e]);
-			$this->resetIndexAll($client);
-		}
+		$client->ingest()
+			->putPipeline($this->indexMappingService->generateGlobalIngest());
 	}
 
 
@@ -122,8 +108,8 @@ class IndexService {
 	final public function resetIndex(Client $client, string $providerId): void {
 		try {
 			$client->deleteByQuery($this->indexMappingService->generateDeleteQuery($providerId));
-		} catch (Exception $e) {
-			$this->logger->notice('reset index all', ['exception' => $e]);
+		} catch (Missing404Exception) {
+			// The provider is already reset when its index does not exist.
 		}
 	}
 
@@ -139,15 +125,15 @@ class IndexService {
 		try {
 			$client->ingest()
 				->deletePipeline($this->indexMappingService->generateGlobalIngest(false));
-		} catch (Exception $e) {
-			$this->logger->warning($e->getMessage(), ['exception' => $e]);
+		} catch (Missing404Exception) {
+			// The pipeline is already absent.
 		}
 
 		try {
 			$client->indices()
 				->delete($this->indexMappingService->generateGlobalMap(false));
-		} catch (Exception $e) {
-			$this->logger->warning($e->getMessage(), ['exception' => $e]);
+		} catch (Missing404Exception) {
+			// The index is already absent.
 		}
 	}
 
