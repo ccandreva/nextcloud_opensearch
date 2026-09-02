@@ -76,9 +76,9 @@ class IndexService {
 
 
     /**
-     * Initializes the index for the given client by checking if the index exists, creating it if necessary,
-     * and setting up the ingest pipeline. If any exceptions occur during these operations, they are logged,
-     * and a reset operation is initiated.
+     * Initializes a missing index and its ingest pipeline.
+     *
+     * An existing index is left untouched. Provisioning exceptions are allowed to reach the caller.
      *
      * @param Client $client The client instance used to interact with the index and ingest pipeline.
      * @param callable|null $onStage Called before each provisioning stage.
