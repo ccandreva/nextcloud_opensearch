@@ -81,19 +81,28 @@ class IndexService {
      * and a reset operation is initiated.
      *
      * @param Client $client The client instance used to interact with the index and ingest pipeline.
-     * @return void
+     * @param callable|null $onStage Called before each provisioning stage.
+     * @return bool True when the index and pipeline were provisioned; false when the index already existed.
      */
-	final public function initializeIndex(Client $client): void {
+	final public function initializeIndex(Client $client, ?callable $onStage = null): bool {
 		if ($client->indices()
 			->exists($this->indexMappingService->generateGlobalMap(false))) {
-			return;
+			return false;
 		}
 
+		if ($onStage !== null) {
+			$onStage('createOpenSearchIndex');
+		}
 		$client->indices()
 			->create($this->indexMappingService->generateGlobalMap());
 
+		if ($onStage !== null) {
+			$onStage('createOpenSearchAttachmentPipeline');
+		}
 		$client->ingest()
 			->putPipeline($this->indexMappingService->generateGlobalIngest());
+
+		return true;
 	}
 
 
