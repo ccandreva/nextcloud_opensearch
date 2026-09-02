@@ -63,6 +63,7 @@ class Initialize extends Base {
 
 		$activeStage = null;
 		$labels = [
+			'checkOpenSearchIndex' => 'Checking configured index... ',
 			'createOpenSearchIndex' => 'Creating index settings and mappings... ',
 			'createOpenSearchAttachmentPipeline' => 'Creating attachment pipeline... ',
 		];
@@ -79,6 +80,9 @@ class Initialize extends Base {
 			);
 
 			if (!$created) {
+				if ($activeStage !== null) {
+					$output->writeln('<info>ok</info>');
+				}
 				$output->writeln('<comment>The configured index already exists and was not modified.</comment>');
 
 				return self::SUCCESS;
