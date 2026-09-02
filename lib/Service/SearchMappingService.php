@@ -459,7 +459,7 @@ class SearchMappingService {
 			'fields' => $fields,
 			'pre_tags' => [''],
 			'post_tags' => [''],
-			'max_analyzed_offset' => 1000000,
+			'max_analyzer_offset' => 1000000,
 		];
 	}
 
