@@ -574,6 +574,29 @@ These criteria have been met.
 
 Known functional issues are tracked separately and do not prevent P0 from being considered complete.
 
+# P1 Provisioning and Error-Handling Tests
+
+Use the explicit provisioning command when validating a missing index:
+
+```bash
+sudo -u apache php occ fulltextsearch_opensearch:initialize
+```
+
+Verify both lifecycle paths:
+
+1. With a missing index and provisioning credentials, the command creates the index, explicit mappings, and the `attachment` pipeline.
+2. With an existing index and restricted operational credentials, the command succeeds without modifying the index.
+3. If index creation is denied, the command identifies the index/mapping stage and prints the OpenSearch error.
+4. If pipeline creation is denied or invalid, the command identifies the attachment-pipeline stage and prints the OpenSearch error.
+5. With all OpenSearch nodes unavailable during document indexing, the platform reports a temporary platform failure.
+6. For permanent document or deletion errors, the runner retains the actionable OpenSearch reason instead of replacing it with a generic message.
+
+After successful provisioning, inspect the `attachment` pipeline and confirm its processors are ordered as attachment extraction, content conversion, and binary removal.
+
+`fulltextsearch:test` writes and removes synthetic documents and requires delete-by-query permission. It is a functional validation command, not the recommended provisioning command for a restricted account.
+
+See `docs/ADMINISTRATION.md` for the provisioning workflow and permission boundaries.
+
 # Future P1 Testing
 
 P1 should add targeted verification around:
