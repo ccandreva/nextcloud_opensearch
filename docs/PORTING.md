@@ -415,6 +415,28 @@ For each area:
 
 Known issues #2 and #3 should be considered while working on the related P1 components. If an upstream port naturally resolves one of them, verify that behavior explicitly before closing the issue.
 
+## P1 index lifecycle and error-handling decisions
+
+The plugin must support an existing index with operational credentials that cannot create indexes. Index initialization therefore has the following contract:
+
+- a missing index is created with explicit mappings, followed by the OpenSearch attachment pipeline;
+- an existing index is accepted and left untouched;
+- creation and pipeline errors propagate with their OpenSearch messages;
+- transport node exhaustion during document indexing is reported to Full Text Search as a temporary platform failure;
+- permanent request failures remain actionable index or runner errors.
+
+Administrators can explicitly provision a new index with:
+
+```bash
+sudo -u apache php occ fulltextsearch_opensearch:initialize
+```
+
+This command uses the configured credentials and reports the active provisioning stage. It is intentionally separate from `fulltextsearch:test`, which writes and deletes synthetic documents and requires delete-by-query permission.
+
+The behavior differs from copying Elasticsearch `stable34` mechanically. The upstream platform uses its Elasticsearch transport exception for temporary failures and has no backend-specific initialization command. The OpenSearch port translates its scoped `NoNodesAvailableException` instead and adds the command to support separation between privileged provisioning and restricted operation.
+
+See `docs/ADMINISTRATION.md` for the complete workflow.
+
 # P2 — OpenSearch Client, TLS, Authentication, and Build Tooling
 
 **Status: Planned**
