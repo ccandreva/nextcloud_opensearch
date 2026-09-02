@@ -85,6 +85,9 @@ class IndexService {
      * @return bool True when the index and pipeline were provisioned; false when the index already existed.
      */
 	final public function initializeIndex(Client $client, ?callable $onStage = null): bool {
+		if ($onStage !== null) {
+			$onStage('checkOpenSearchIndex');
+		}
 		if ($client->indices()
 			->exists($this->indexMappingService->generateGlobalMap(false))) {
 			return false;
