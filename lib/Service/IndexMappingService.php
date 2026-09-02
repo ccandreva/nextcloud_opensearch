@@ -323,15 +323,20 @@ class IndexMappingService {
 			'processors' => [
 				[
 					'attachment' => [
+						'remove_binary' => true,
 						'field' => 'content',
 						'indexed_chars' => -1
-					],
+					]
+				],
+				[
 					'convert' => [
 						'field' => 'attachment.content',
 						'type' => 'string',
 						'target_field' => 'content',
 						'ignore_failure' => true
-					],
+					]
+				],
+				[
 					'remove' => [
 						'field' => 'attachment.content',
 						'ignore_failure' => true
