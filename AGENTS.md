@@ -26,6 +26,7 @@ Preserve:
 - OpenSearch PHP client
 - OpenSearch-specific authentication/configuration
 - existing configuration keys unless migration is intentional
+- existing author, copyright, and license headers unless changing them is an explicit design decision
 
 Known OpenSearch divergences
 ----------------------------
