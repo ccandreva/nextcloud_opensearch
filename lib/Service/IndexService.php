@@ -76,36 +76,50 @@ class IndexService {
 
 
     /**
-     * Initializes a missing index and its ingest pipeline.
+     * Initializes a missing index and independently provisions a missing ingest pipeline.
      *
-     * An existing index is left untouched. Provisioning exceptions are allowed to reach the caller.
+     * Existing resources are left untouched. Provisioning exceptions are allowed to reach the caller.
      *
      * @param Client $client The client instance used to interact with the index and ingest pipeline.
      * @param callable|null $onStage Called before each provisioning stage.
-     * @return bool True when the index and pipeline were provisioned; false when the index already existed.
+     * @return array{indexCreated: bool, pipelineCreated: bool} Provisioning results for each resource.
      */
-	final public function initializeIndex(Client $client, ?callable $onStage = null): bool {
+	final public function initializeIndex(Client $client, ?callable $onStage = null): array {
+		$indexCreated = false;
+		$pipelineCreated = false;
+
 		if ($onStage !== null) {
 			$onStage('checkOpenSearchIndex');
 		}
-		if ($client->indices()
+		if (!$client->indices()
 			->exists($this->indexMappingService->generateGlobalMap(false))) {
-			return false;
+			if ($onStage !== null) {
+				$onStage('createOpenSearchIndex');
+			}
+			$client->indices()
+				->create($this->indexMappingService->generateGlobalMap());
+			$indexCreated = true;
 		}
 
 		if ($onStage !== null) {
-			$onStage('createOpenSearchIndex');
+			$onStage('checkOpenSearchAttachmentPipeline');
 		}
-		$client->indices()
-			->create($this->indexMappingService->generateGlobalMap());
-
-		if ($onStage !== null) {
-			$onStage('createOpenSearchAttachmentPipeline');
+		try {
+			$client->ingest()
+				->getPipeline($this->indexMappingService->generateGlobalIngest(false));
+		} catch (Missing404Exception) {
+			if ($onStage !== null) {
+				$onStage('createOpenSearchAttachmentPipeline');
+			}
+			$client->ingest()
+				->putPipeline($this->indexMappingService->generateGlobalIngest());
+			$pipelineCreated = true;
 		}
-		$client->ingest()
-			->putPipeline($this->indexMappingService->generateGlobalIngest());
 
-		return true;
+		return [
+			'indexCreated' => $indexCreated,
+			'pipelineCreated' => $pipelineCreated,
+		];
 	}
 
 
