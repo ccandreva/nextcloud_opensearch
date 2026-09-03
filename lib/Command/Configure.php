@@ -84,7 +84,13 @@ class Configure extends Base {
 			$this->configService->setConfig($config);
 		}
 
-		$output->writeln(json_encode($this->configService->getConfig(), JSON_PRETTY_PRINT));
+		$config = $this->configService->getConfig();
+		$config['opensearch_host'] = preg_replace(
+			'#(?<=://)([^:/@,]+):([^@,]*)@#',
+			'$1:********@',
+			$config['opensearch_host'],
+		);
+		$output->writeln(json_encode($config, JSON_PRETTY_PRINT));
 
 		return self::SUCCESS;
 	}
