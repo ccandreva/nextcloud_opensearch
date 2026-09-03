@@ -419,9 +419,11 @@ Known issues #2 and #3 should be considered while working on the related P1 comp
 
 The plugin must support an existing index with operational credentials that cannot create indexes. Index initialization therefore has the following contract:
 
-- a missing index is created with explicit mappings, followed by the OpenSearch attachment pipeline;
-- an existing index is accepted and left untouched;
-- creation and pipeline errors propagate with their OpenSearch messages;
+- index and attachment-pipeline existence are checked independently;
+- a missing index is created with explicit mappings while an existing index and its mappings are left untouched;
+- a missing attachment pipeline is created while an existing pipeline is left untouched;
+- a retry after partial provisioning can create the missing pipeline without altering the index;
+- creation, lookup, and pipeline errors propagate with their OpenSearch messages;
 - transport node exhaustion during document indexing is reported to Full Text Search as a temporary platform failure;
 - permanent request failures remain actionable index or runner errors.
 
