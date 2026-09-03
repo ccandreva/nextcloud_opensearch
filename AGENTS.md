@@ -39,6 +39,10 @@ Verified during the Nextcloud 34 P1 runtime tests:
   does not accept Elasticsearch's `remove_binary` option. Omit that option.
 - Attachment, convert, and remove must remain separate sequential ingest
   processor entries.
+- With the pinned OpenSearch PHP client and supported test cluster, requesting a
+  missing ingest pipeline can return an empty array instead of throwing
+  `Missing404Exception`. Confirm the requested pipeline ID is present in the
+  response; retain the 404 path for server-version compatibility.
 
 Re-check these differences against the supported OpenSearch version before
 adopting future Elasticsearch implementation changes.
