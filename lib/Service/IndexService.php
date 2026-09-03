@@ -104,10 +104,16 @@ class IndexService {
 		if ($onStage !== null) {
 			$onStage('checkOpenSearchAttachmentPipeline');
 		}
+		$pipelineParams = $this->indexMappingService->generateGlobalIngest(false);
+		$pipelineExists = false;
 		try {
-			$client->ingest()
-				->getPipeline($this->indexMappingService->generateGlobalIngest(false));
+			$pipelines = $client->ingest()
+				->getPipeline($pipelineParams);
+			$pipelineExists = array_key_exists($pipelineParams['id'], $pipelines);
 		} catch (Missing404Exception) {
+			// Some OpenSearch versions return 404 instead of an empty result.
+		}
+		if (!$pipelineExists) {
 			if ($onStage !== null) {
 				$onStage('createOpenSearchAttachmentPipeline');
 			}
