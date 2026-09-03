@@ -65,11 +65,12 @@ class Initialize extends Base {
 		$labels = [
 			'checkOpenSearchIndex' => 'Checking configured index... ',
 			'createOpenSearchIndex' => 'Creating index settings and mappings... ',
+			'checkOpenSearchAttachmentPipeline' => 'Checking attachment pipeline... ',
 			'createOpenSearchAttachmentPipeline' => 'Creating attachment pipeline... ',
 		];
 
 		try {
-			$created = $this->platform->provisionIndex(
+			$result = $this->platform->provisionIndex(
 				function (string $stage) use ($output, $labels, &$activeStage): void {
 					if ($activeStage !== null) {
 						$output->writeln('<info>ok</info>');
@@ -79,17 +80,14 @@ class Initialize extends Base {
 				}
 			);
 
-			if (!$created) {
-				if ($activeStage !== null) {
-					$output->writeln('<info>ok</info>');
-				}
-				$output->writeln('<comment>The configured index already exists and was not modified.</comment>');
-
-				return self::SUCCESS;
-			}
-
 			if ($activeStage !== null) {
 				$output->writeln('<info>ok</info>');
+			}
+			if (!$result['indexCreated']) {
+				$output->writeln('<comment>The configured index already exists and was not modified.</comment>');
+			}
+			if (!$result['pipelineCreated']) {
+				$output->writeln('<comment>The attachment pipeline already exists and was not modified.</comment>');
 			}
 
 			return self::SUCCESS;
