@@ -390,7 +390,7 @@ Investigation during P0 also revealed differences between the OpenSearch and cur
 
 # P1 — Functional Search and Index Modernization
 
-**Status: Planned**
+**Status: In progress on `port-nextcloud-34-P1`**
 
 P1 should concentrate on functional differences accumulated since the OpenSearch fork diverged from Elasticsearch.
 
