@@ -314,7 +314,7 @@ On a fresh configuration, the expected defaults are:
 }
 ```
 
-This verifies the read path through `ConfigLexicon` and `IAppConfig`.
+This verifies the read path through `ConfigLexicon` and `IAppConfig`. When the configured host contains credentials, verify that the command prints the username but replaces the password with `********`.
 
 # Configure the Full Text Search Platform
 
@@ -585,11 +585,13 @@ sudo -u apache php occ fulltextsearch_opensearch:initialize
 Verify both lifecycle paths:
 
 1. With a missing index and provisioning credentials, the command creates the index, explicit mappings, and the `attachment` pipeline.
-2. With an existing index and restricted operational credentials, the command succeeds without modifying the index.
-3. If index creation is denied, the command identifies the index/mapping stage and prints the OpenSearch error.
-4. If pipeline creation is denied or invalid, the command identifies the attachment-pipeline stage and prints the OpenSearch error.
-5. With all OpenSearch nodes unavailable during document indexing, the platform reports a temporary platform failure.
-6. For permanent document or deletion errors, the runner retains the actionable OpenSearch reason instead of replacing it with a generic message.
+2. With an existing index and existing attachment pipeline, the command succeeds without modifying either resource.
+3. With an existing index and missing attachment pipeline, the command leaves the index and mappings untouched and creates only the pipeline.
+4. After intentionally denying pipeline creation, rerun with sufficient permission and verify that initialization recovers by creating only the missing pipeline.
+5. If index creation is denied, the command identifies the index/mapping stage and prints the OpenSearch error.
+6. If pipeline creation is denied or invalid, the command identifies the attachment-pipeline stage and prints the OpenSearch error.
+7. With all OpenSearch nodes unavailable during document indexing, the platform reports a temporary platform failure.
+8. For permanent document or deletion errors, the runner retains the actionable OpenSearch reason instead of replacing it with a generic message.
 
 After successful provisioning, inspect the `attachment` pipeline and confirm its processors are ordered as attachment extraction, content conversion, and binary removal.
 
