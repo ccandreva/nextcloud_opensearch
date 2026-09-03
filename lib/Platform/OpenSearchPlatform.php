@@ -170,15 +170,15 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 
 
 	/**
-	 * Provision a missing index and its attachment pipeline.
+	 * Provision a missing index and independently provision a missing attachment pipeline.
 	 *
-	 * An existing index is left untouched.
+	 * Existing resources are left untouched.
 	 *
 	 * @param callable|null $onStage
-	 * @return bool true when the index and pipeline were created
+	 * @return array{indexCreated: bool, pipelineCreated: bool} provisioning results for each resource
 	 * @throws ConfigurationException
 	 */
-	final public function provisionIndex(?callable $onStage = null): bool {
+	final public function provisionIndex(?callable $onStage = null): array {
 		return $this->indexService->initializeIndex(
 			$this->getClient(),
 			function (string $stage) use ($onStage): void {
