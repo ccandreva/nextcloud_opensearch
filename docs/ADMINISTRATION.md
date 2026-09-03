@@ -12,7 +12,7 @@ sudo -u apache php occ fulltextsearch_opensearch:configure '{"opensearch_host":"
 
 Treat shell history and process listings as sensitive when credentials are embedded in a command. Running the command without a JSON argument prints the current configuration with host passwords masked.
 
-## Initialize a new index
+## Initialize OpenSearch resources
 
 Run the explicit initialization command with credentials that may create an index and manage an ingest pipeline:
 
@@ -20,16 +20,18 @@ Run the explicit initialization command with credentials that may create an inde
 sudo -u apache php occ fulltextsearch_opensearch:initialize
 ```
 
-When the configured index does not exist, the command creates:
+The command checks the configured index and the `attachment` ingest pipeline independently:
 
-- the index settings and explicit field mappings required by the plugin;
-- the `attachment` ingest pipeline used for encoded document content.
+- when the index is missing, it creates the index settings and explicit field mappings;
+- when the index exists, it does not recreate it or alter its mappings;
+- when the attachment pipeline is missing, it creates the pipeline used for encoded document content;
+- when the attachment pipeline exists, it does not replace it.
 
-The command reports connection, index/mapping, and pipeline failures separately and returns a nonzero exit status with the OpenSearch error message.
+This independent behavior allows the command to recover when index creation succeeded but pipeline creation failed. Running it again leaves the new index untouched and retries only the missing pipeline.
 
-When the configured index already exists, the command returns successfully and does not recreate it, replace its mappings, or update the pipeline. This is intentional: an existing index may be operated with credentials that are not allowed to create indexes.
+The command reports connection, index/mapping, and pipeline failures separately and returns a nonzero exit status with the OpenSearch error message. A restricted account without permission to inspect or create the pipeline therefore receives an actionable permission failure.
 
-The command is a provisioning operation, not a repair or migration operation. It does not inspect an existing index for mapping compatibility.
+The command is a provisioning operation, not a general repair or migration operation. It does not inspect an existing index for mapping compatibility or replace existing mappings or pipeline definitions.
 
 ## Separate provisioning and operational credentials
 
@@ -38,12 +40,14 @@ A deployment may temporarily configure a privileged OpenSearch account, run `ful
 Provisioning requires permission to:
 
 - test connectivity and check whether the configured index exists;
-- create the configured index with its settings and mappings;
-- create or update the global `attachment` ingest pipeline.
+- inspect the global `attachment` ingest pipeline;
+- create the configured index with its settings and mappings when it is missing;
+- create the global `attachment` ingest pipeline when it is missing.
 
 Normal indexing and searching do not require permission to create indexes or manage pipelines after provisioning. The operational account requires permission to:
 
 - check the configured index;
+- inspect the pre-created `attachment` pipeline during initialization;
 - search and retrieve documents;
 - create, update, and delete documents in that index;
 - execute the pre-created `attachment` pipeline when attachment content is indexed.
@@ -62,4 +66,4 @@ sudo -u apache php occ fulltextsearch:test
 
 This test writes and removes synthetic documents. It is useful after provisioning but should not be used as the provisioning mechanism for a restricted account because its cleanup requires delete-by-query access.
 
-The core indexing and test runners also call the platform's `initializeIndex()` hook. As with the explicit command, that hook provisions only a missing index and leaves an existing index untouched.
+The core indexing and test runners also call the platform's `initializeIndex()` hook. As with the explicit command, that hook leaves existing resources untouched and provisions either resource when it is missing.
