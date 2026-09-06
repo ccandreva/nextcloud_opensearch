@@ -66,7 +66,7 @@ class SettingsController extends Controller {
      * @return DataResponse The response object containing configuration data and an HTTP status code.
      */
 	final public function getSettingsAdmin(): DataResponse {
-		$data = $this->configService->getConfig();
+		$data = $this->configService->getAdminConfig();
 
 		return new DataResponse($data, Http::STATUS_OK);
 	}
@@ -79,7 +79,9 @@ class SettingsController extends Controller {
      */
 	final public function setSettingsAdmin(array $data): DataResponse {
 
-        $errors = $this->configService->checkConfig($data);
+		// The frontend deliberately omits an unchanged host so stored credentials
+		// never need to make a browser round trip.
+		$errors = $this->configService->checkConfig(array_merge($this->configService->getConfig(), $data));
 
         if (empty($errors)) {
             $this->configService->setConfig($data);

@@ -1,0 +1,28 @@
+.fulltextsearch-opensearch-settings {
+	max-width: 700px;
+}
+
+.fulltextsearch-opensearch-settings .settings-field {
+	margin-bottom: 18px;
+}
+
+.fulltextsearch-opensearch-settings label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.fulltextsearch-opensearch-settings input[type='text'],
+.fulltextsearch-opensearch-settings input[type='number'] {
+	width: min(100%, 520px);
+}
+
+.fulltextsearch-opensearch-settings .settings-hint,
+.fulltextsearch-opensearch-settings .settings-status {
+	display: block;
+	margin-top: 4px;
+}
+
+.fulltextsearch-opensearch-settings [aria-invalid='true'] {
+	border-color: var(--color-error);
+}

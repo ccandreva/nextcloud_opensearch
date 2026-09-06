@@ -347,6 +347,22 @@ Use credentials/TLS settings appropriate for the test OpenSearch installation.
 
 Do not record real credentials in this document or commit them to the repository.
 
+# Administrator Settings Browser Test
+
+Automated tests do not exercise Nextcloud's administration-page composition,
+Content Security Policy, or browser request handling. Perform this acceptance
+test on the supported Nextcloud 34 installation after deploying the application:
+
+1. Record the output of `sudo -u apache php occ fulltextsearch_opensearch:configure` and confirm that any host password is masked. Do not copy credentials into test reports.
+2. Sign in as an administrator and open **Administration settings → Full Text Search**. Confirm that the OpenSearch section renders and is not left as an empty mount point.
+3. In browser developer tools, confirm that the console has no JavaScript errors. Inspect the page source and initial-state data and confirm that neither the OpenSearch username nor password is present.
+4. Inspect the Network panel during page load. The initial configuration should be supplied with the page; there should be no legacy `GET /apps/fulltextsearch_opensearch/admin/settings` request. Confirm that no response contains OpenSearch credentials.
+5. Compare every displayed value with the no-argument OCC output. The host field should retain the configured scheme, server, port, and path while omitting its user information. The index, fields limit, tokenizer, logging, and self-signed-certificate values should match.
+6. Change a non-host setting and select **Save**. Confirm that the POST to `/apps/fulltextsearch_opensearch/admin/settings` succeeds, its response contains no credentials, and `nextcloud.log` contains no PHP error or credential-bearing message. Reload and confirm that the value persisted and the credentialed host still works through OCC.
+7. Replace the host value with a complete test URL (including test-only credentials when authentication is required), save, and reload. Confirm that the endpoint remains visible without user information and that OCC reports the new URL with only its password masked.
+8. Enter an invalid host scheme or invalid index name and save. Confirm that the request returns HTTP 400, the relevant field is highlighted, useful validation text is shown, no invalid value is persisted, and `nextcloud.log` has no unexpected exception or credential disclosure.
+9. Restore the original test configuration. Compare the browser values once more with `sudo -u apache php occ fulltextsearch_opensearch:configure` to verify that GUI and OCC use the same underlying configuration.
+
 Verify the resulting configuration with:
 
 ```bash

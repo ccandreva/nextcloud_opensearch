@@ -31,12 +31,17 @@ namespace OCA\FullTextSearch_OpenSearch\Settings;
 
 use Exception;
 use OCA\FullTextSearch_OpenSearch\AppInfo\Application;
+use OCA\FullTextSearch_OpenSearch\Service\ConfigService;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IInitialState;
 use OCP\Settings\ISettings;
 
 class Admin implements ISettings {
 
-	public function __construct() {
+	public function __construct(
+		private IInitialState $initialState,
+		private ConfigService $configService,
+	) {
 	}
 
 	/**
@@ -44,6 +49,9 @@ class Admin implements ISettings {
 	 * @throws Exception
 	 */
 	final public function getForm(): TemplateResponse {
+		// Never put an OpenSearch password in the page's rendered initial state.
+		$this->initialState->provideInitialState('admin-config', $this->configService->getAdminConfig());
+
 		return new TemplateResponse(Application::APP_NAME, 'settings.admin', []);
 	}
 

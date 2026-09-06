@@ -51,6 +51,24 @@ class ConfigService {
 		];
 	}
 
+	/**
+	 * Configuration safe to send to an administrator's browser.
+	 *
+	 * User information is removed from every configured host. The browser only
+	 * sends the host back when the administrator edits it, so an unrelated
+	 * settings change cannot overwrite stored credentials.
+	 */
+	public function getAdminConfig(): array {
+		$config = $this->getConfig();
+		$config[ConfigLexicon::OPENSEARCH_HOST] = preg_replace(
+			'#(?<=://)[^/@,]+@#',
+			'',
+			$config[ConfigLexicon::OPENSEARCH_HOST],
+		);
+
+		return $config;
+	}
+
 	public function setConfig(array $save): void {
 		if (array_key_exists(ConfigLexicon::FIELDS_LIMIT, $save)) {
 			$this->appConfig->setAppValueInt(ConfigLexicon::FIELDS_LIMIT, (int)$save[ConfigLexicon::FIELDS_LIMIT]);

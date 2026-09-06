@@ -81,4 +81,24 @@ class ConfigServiceTest extends TestCase
 
         $this->assertEquals([ConfigLexicon::OPENSEARCH_INDEX], $result);
     }
+
+    public function testAdminConfigDoesNotExposeCredentials(): void
+    {
+        $this->configMock->method('getAppValueInt')->willReturn(10000);
+        $this->configMock->method('getAppValueString')->willReturnMap([
+            [ConfigLexicon::OPENSEARCH_HOST, 'https://alice:secret@example.com:9200,http://bob:other@second.example:9200'],
+            [ConfigLexicon::OPENSEARCH_INDEX, 'nextcloud'],
+            [ConfigLexicon::ANALYZER_TOKENIZER, 'standard'],
+        ]);
+        $this->configMock->method('getAppValueBool')->willReturn(false);
+
+        $result = $this->configService->getAdminConfig();
+
+        $this->assertSame(
+            'https://example.com:9200,http://second.example:9200',
+            $result[ConfigLexicon::OPENSEARCH_HOST],
+        );
+        $this->assertStringNotContainsString('secret', json_encode($result));
+        $this->assertStringNotContainsString('other', json_encode($result));
+    }
 }
