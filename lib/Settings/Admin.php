@@ -33,7 +33,7 @@ use Exception;
 use OCA\FullTextSearch_OpenSearch\AppInfo\Application;
 use OCA\FullTextSearch_OpenSearch\Service\ConfigService;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IInitialState;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Settings\ISettings;
 
 class Admin implements ISettings {
