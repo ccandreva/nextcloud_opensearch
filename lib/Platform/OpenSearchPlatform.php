@@ -43,7 +43,9 @@ use OCA\FullTextSearch_OpenSearch\Service\SearchService;
 use OCA\FullTextSearch_OpenSearch\Tools\Traits\TArrayTools;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\ClientBuilder;
+use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Common\Exceptions\NoNodesAvailableException;
 use OCP\AppFramework\Services\IAppConfig;
+use OCP\FullTextSearch\Exceptions\PlatformTemporaryException;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
 use OCP\FullTextSearch\Model\IDocumentAccess;
 use OCP\FullTextSearch\Model\IIndex;
@@ -163,7 +165,29 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 	 */
 	final public function initializeIndex(): void
     {
-		$this->indexService->initializeIndex($this->getClient());
+		$this->provisionIndex();
+	}
+
+
+	/**
+	 * Provision a missing index and independently provision a missing attachment pipeline.
+	 *
+	 * Existing resources are left untouched.
+	 *
+	 * @param callable|null $onStage
+	 * @return array{indexCreated: bool, pipelineCreated: bool} provisioning results for each resource
+	 * @throws ConfigurationException
+	 */
+	final public function provisionIndex(?callable $onStage = null): array {
+		return $this->indexService->initializeIndex(
+			$this->getClient(),
+			function (string $stage) use ($onStage): void {
+				$this->updateRunnerAction($stage, true);
+				if ($onStage !== null) {
+					$onStage($stage);
+				}
+			}
+		);
 	}
 
 
@@ -204,6 +228,8 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 			);
 
 			return $index;
+		} catch (NoNodesAvailableException) {
+			throw new PlatformTemporaryException();
 		} catch (Exception $e) {
 			$this->manageIndexErrorException($document, $e);
 		}
@@ -218,9 +244,11 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 			);
 
 			return $index;
+		} catch (NoNodesAvailableException) {
+			throw new PlatformTemporaryException();
 		} catch (Exception $e) {
 			$this->updateNewIndexResult(
-				$document->getIndex(), '', 'fail',
+				$document->getIndex(), $e->getMessage(), get_class($e),
 				IRunner::RESULT_TYPE_FAIL
 			);
 			$this->manageIndexErrorException($document, $e);
@@ -288,7 +316,7 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 	private function parseIndexErrorException(Exception $e): array {
 		$arr = json_decode($e->getMessage(), true);
 		if (!is_array($arr)) {
-			return ['error', 'unknown error', ''];
+			return ['error', $e->getMessage(), get_class($e)];
 		}
 
 		if (empty($this->getArray('error', $arr))) {
@@ -349,8 +377,12 @@ class OpenSearchPlatform implements IFullTextSearchPlatform {
 				$this->indexService->deleteIndex($this->getClient(), $index);
 				$this->updateNewIndexResult($index, 'index deleted', 'success', IRunner::RESULT_TYPE_SUCCESS);
 			} catch (Exception $e) {
+				[, $message, $status] = $this->parseIndexErrorException($e);
+				$exception = ($status !== '') ? $status : get_class($e);
+				$index->addError($message, $exception, IIndex::ERROR_SEV_3);
+				$this->updateNewIndexError($index, $message, $exception, IIndex::ERROR_SEV_3);
 				$this->updateNewIndexResult(
-					$index, 'index not deleted', 'issue while deleting index', IRunner::RESULT_TYPE_WARNING
+					$index, $message, $exception, IRunner::RESULT_TYPE_WARNING
 				);
 			}
 		}

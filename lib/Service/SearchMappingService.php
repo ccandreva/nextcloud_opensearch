@@ -112,6 +112,8 @@ class SearchMappingService {
 
 		//		$bool['filter'][]['bool']['should'] = $this->generateSearchQueryTags($request->getTags());
 
+		$this->generateSearchSince($bool, (int)$request->getOption('since'));
+
 		$params['body']['query']['bool'] = $bool;
 		$params['body']['highlight'] = $this->generateSearchHighlighting($request);
 
@@ -303,20 +305,38 @@ class SearchMappingService {
 	 * @return array
 	 */
 	private function generateSearchQueryAccess(IDocumentAccess $access): array {
-		$query = [];
-		$query[] = ['term' => ['owner' => $access->getViewerId()]];
-		$query[] = ['term' => ['users' => $access->getViewerId()]];
-		$query[] = ['term' => ['users' => '__all']];
+		$query = array_merge(
+			$this->generateAccessFieldQueries('owner', $access->getViewerId()),
+			$this->generateAccessFieldQueries('users', $access->getViewerId()),
+			$this->generateAccessFieldQueries('users', '__all'),
+		);
 
 		foreach ($access->getGroups() as $group) {
-			$query[] = ['term' => ['groups' => $group]];
+			$query = array_merge($query, $this->generateAccessFieldQueries('groups', $group));
 		}
 
 		foreach ($access->getCircles() as $circle) {
-			$query[] = ['term' => ['circles' => $circle]];
+			$query = array_merge($query, $this->generateAccessFieldQueries('circles', $circle));
 		}
 
 		return $query;
+	}
+
+
+	/**
+	 * Generate exact-match alternatives for canonical keyword mappings and
+	 * historical text mappings that expose a keyword multi-field.
+	 *
+	 * @param string $field
+	 * @param string $value
+	 *
+	 * @return array
+	 */
+	private function generateAccessFieldQueries(string $field, string $value): array {
+		return [
+			['term' => [$field => $value]],
+			['term' => [$field . '.keyword' => $value]],
+		];
 	}
 
 
@@ -355,6 +375,22 @@ class SearchMappingService {
 		return $query;
 	}
 
+
+	/**
+	 * Add a lower bound on document modification time when requested.
+	 *
+	 * @param array $bool
+	 * @param int $since
+	 */
+	private function generateSearchSince(array &$bool, int $since): void {
+		if ($since === 0) {
+			return;
+		}
+
+		$bool['filter'][]['bool']['must'] = [
+			['range' => ['lastModified' => ['gte' => $since]]],
+		];
+	}
 
 	/**
 	 * @param ISearchRequestSimpleQuery[] $queries
@@ -422,7 +458,8 @@ class SearchMappingService {
 		return [
 			'fields' => $fields,
 			'pre_tags' => [''],
-			'post_tags' => ['']
+			'post_tags' => [''],
+			'max_analyzer_offset' => 1000000,
 		];
 	}
 

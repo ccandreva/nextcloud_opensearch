@@ -390,7 +390,7 @@ Investigation during P0 also revealed differences between the OpenSearch and cur
 
 # P1 — Functional Search and Index Modernization
 
-**Status: Planned**
+**Status: In progress on `port-nextcloud-34-P1`**
 
 P1 should concentrate on functional differences accumulated since the OpenSearch fork diverged from Elasticsearch.
 
@@ -414,6 +414,30 @@ For each area:
 7. If unrelated existing bugs are discovered, create or update issues rather than silently expanding P1 scope.
 
 Known issues #2 and #3 should be considered while working on the related P1 components. If an upstream port naturally resolves one of them, verify that behavior explicitly before closing the issue.
+
+## P1 index lifecycle and error-handling decisions
+
+The plugin must support an existing index with operational credentials that cannot create indexes. Index initialization therefore has the following contract:
+
+- index and attachment-pipeline existence are checked independently;
+- a missing index is created with explicit mappings while an existing index and its mappings are left untouched;
+- a missing attachment pipeline is created while an existing pipeline is left untouched;
+- a retry after partial provisioning can create the missing pipeline without altering the index;
+- creation, lookup, and pipeline errors propagate with their OpenSearch messages;
+- transport node exhaustion during document indexing is reported to Full Text Search as a temporary platform failure;
+- permanent request failures remain actionable index or runner errors.
+
+Administrators can explicitly provision a new index with:
+
+```bash
+sudo -u apache php occ fulltextsearch_opensearch:initialize
+```
+
+This command uses the configured credentials and reports the active provisioning stage. It is intentionally separate from `fulltextsearch:test`, which writes and deletes synthetic documents and requires delete-by-query permission.
+
+The behavior differs from copying Elasticsearch `stable34` mechanically. The upstream platform uses its Elasticsearch transport exception for temporary failures and has no backend-specific initialization command. The OpenSearch port translates its scoped `NoNodesAvailableException` instead and adds the command to support separation between privileged provisioning and restricted operation.
+
+See `docs/ADMINISTRATION.md` for the complete workflow.
 
 # P2 — OpenSearch Client, TLS, Authentication, and Build Tooling
 

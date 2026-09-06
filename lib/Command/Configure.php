@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_OpenSearch\Command;
 
 use OC\Core\Command\Base;
+use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCA\FullTextSearch_OpenSearch\Service\ConfigService;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -84,7 +85,13 @@ class Configure extends Base {
 			$this->configService->setConfig($config);
 		}
 
-		$output->writeln(json_encode($this->configService->getConfig(), JSON_PRETTY_PRINT));
+		$config = $this->configService->getConfig();
+		$config[ConfigLexicon::OPENSEARCH_HOST] = preg_replace(
+			'#(?<=://)([^:/@,]+):([^@,]*)@#',
+			'$1:********@',
+			$config[ConfigLexicon::OPENSEARCH_HOST],
+		);
+		$output->writeln(json_encode($config, JSON_PRETTY_PRINT));
 
 		return self::SUCCESS;
 	}

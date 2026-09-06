@@ -26,6 +26,26 @@ Preserve:
 - OpenSearch PHP client
 - OpenSearch-specific authentication/configuration
 - existing configuration keys unless migration is intentional
+- existing author, copyright, and license headers unless changing them is an explicit design decision
+
+Known OpenSearch divergences
+----------------------------
+Verified during the Nextcloud 34 P1 runtime tests:
+
+- Search highlight requests use `max_analyzer_offset` in OpenSearch.
+  Elasticsearch stable34 uses `max_analyzed_offset`; copying that key causes
+  an OpenSearch `x_content_parse_exception`.
+- The OpenSearch attachment processor used by the supported test environment
+  does not accept Elasticsearch's `remove_binary` option. Omit that option.
+- Attachment, convert, and remove must remain separate sequential ingest
+  processor entries.
+- With the pinned OpenSearch PHP client and supported test cluster, requesting a
+  missing ingest pipeline can return an empty array instead of throwing
+  `Missing404Exception`. Confirm the requested pipeline ID is present in the
+  response; retain the 404 path for server-version compatibility.
+
+Re-check these differences against the supported OpenSearch version before
+adopting future Elasticsearch implementation changes.
 
 Branches
 --------
