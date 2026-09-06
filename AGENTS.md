@@ -47,6 +47,11 @@ Verified during the Nextcloud 34 P1 runtime tests:
 Re-check these differences against the supported OpenSearch version before
 adopting future Elasticsearch implementation changes.
 
+For frontend/admin-settings work, use stable34 as the behavioral reference,
+preserve OpenSearch configuration keys and naming, do not expose credentials
+in initial state or rendered markup, and verify both browser behavior and
+the OCC configuration path.
+
 Branches
 --------
 devel                     ongoing development
