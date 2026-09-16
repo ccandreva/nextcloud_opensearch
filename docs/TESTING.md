@@ -369,9 +369,9 @@ Verify the resulting configuration with:
 sudo -u apache php occ fulltextsearch_opensearch:configure
 ```
 
-# Functional Platform Test
+# Synthetic Platform Contract Test
 
-The principal integration test is provided by the Full Text Search core:
+The Full Text Search core provides a synthetic backend contract test:
 
 ```bash
 sudo -u apache php occ fulltextsearch:test
@@ -389,7 +389,7 @@ not:
 fulltextsearch_opensearch:test
 ```
 
-The test command belongs to the Full Text Search core and exercises whichever platform is currently configured.
+The test command belongs to the Full Text Search core and exercises whichever platform is currently configured. It uses mocked documents; follow the real-provider acceptance procedure below to verify actual Files indexing and user-facing search.
 
 # P0 Functional Test Results
 
@@ -423,9 +423,9 @@ Basic search tests also passed, including:
 
 This establishes that the OpenSearch client, indexing path, retrieval path, and substantial portions of query generation remain operational on Nextcloud 34.
 
-# Known Functional Test Failure: Group Access
+# Historical P0 Failure: Group Access
 
-The test currently fails during group access testing:
+The P0 test failed during group access testing:
 
 ```text
 Searching with group access rights:
@@ -439,9 +439,9 @@ This is tracked as GitHub issue #3.
 
 The same behavior was previously reported against an older version of the OpenSearch application and therefore should not be treated as a regression introduced by the Nextcloud 34 P0 port.
 
-# Known Functional Test Failure: Missing Index
+# Historical P0 Failure: Missing Index
 
-There is currently a second limitation when using a completely new index name.
+P0 had a second limitation when using a completely new index name.
 
 If the configured OpenSearch index does not exist at all:
 
@@ -465,7 +465,7 @@ This occurs because the Full Text Search test removes stale test documents befor
 
 This behavior is tracked as GitHub issue #2.
 
-Until that issue is fixed, creating an empty index manually allows the test to progress, but doing so has an important side effect described below.
+The historical workaround was to create an empty index manually, but that has the mapping side effect described below. Current code provides `fulltextsearch_opensearch:initialize`; use it to create explicit mappings instead. The issue #15 procedure explains the separate accommodation required to test immutable P0 safely.
 
 # Mapping Caveat When Manually Creating an Index
 
@@ -635,3 +635,199 @@ P1 should add targeted verification around:
 Issues #2 and #3 should be explicitly retested as relevant P1 changes are introduced.
 
 A fix should not be considered complete solely because code was changed. The corresponding runtime reproduction should pass before the issue is closed.
+
+# Real-provider end-to-end acceptance (#15)
+
+`fulltextsearch:test` validates the synthetic backend contract. It does **not**
+validate Files enumeration, real attachment extraction, population of a replacement
+index, the browser search path, or permissions on real files. Accept a release only
+when the applicable layers below have evidence.
+
+## Establish the comparison and protect reference data
+
+1. Read the porting and administration guides. Record `git status --short`, branch,
+   full commit SHA, and actual Nextcloud, PHP, provider, backend, client, and server
+   versions. Use `git log --graph --decorate --oneline --all` and commit contents to
+   identify an immutable baseline; do not depend on old branch names.
+2. Record the selected platform and index and securely retain the configuration
+   needed to restore them. Never print an old revision's unmasked configure output.
+   Current browser-safe configuration removes all host user information. Do not
+   record credentials, personal filenames/content, or raw request logs in reports.
+3. Check connection, index-read, and pipeline-read permissions before resetting
+   anything. Root server version responses can be compatibility values; distinguish
+   them from a verified node version. A denied node-info query is not proof of a
+   particular OpenSearch version.
+4. Use distinct fresh indexes, such as `nextcloud34-ab-p0-issue15` and
+   `nextcloud34-ab-current-issue15`. Record their creation and verify nonexistence
+   first. Never reset/delete an existing reference index. Keep files, accounts,
+   shares, provider settings, and runtime dependencies constant between runs.
+5. Prevent competing indexing runs; use the core runner's lock. Record any site
+   changes during the comparison. Each CLI invocation loads the checked-out PHP
+   afresh; account for web OPcache separately before browser acceptance.
+
+## Understand and prepare indexing state
+
+Files generates chunks per user, enumerates documents under those chunks, then
+fills content and access metadata. Enumeration honors `.noindex`, storage/provider
+settings, and indexability rules. Offers across users/chunks need not be unique.
+The core runner consults `fulltextsearch_index`, keyed by provider/document and
+collection, **not by OpenSearch index name**. It skips ignored documents, documents
+with retained errors (unless requested otherwise), and documents considered
+up-to-date. Merely changing `opensearch_index` does not clear this state.
+
+The `force` option does not override the earlier ignored/error checks. An ordinary
+`fulltextsearch:index` invocation is therefore not proof of a full rebuild.
+For a clean A/B rebuild, select and provision the disposable target first, then
+reset only the Files provider:
+
+```bash
+sudo -u apache php occ fulltextsearch_opensearch:configure \
+  '{"opensearch_index":"nextcloud34-ab-current-issue15"}'
+sudo -u apache php occ fulltextsearch_opensearch:initialize
+sudo -u apache php occ fulltextsearch:reset --provider files
+# Interactive confirmations: y, then reset files ALL
+sudo -u apache php occ fulltextsearch:index --no-readline '{"provider":"files"}'
+```
+
+Verify the active disposable index immediately before reset. This reset removes
+Files documents from the selected backend and deletes the shared Files indexing
+state in Nextcloud. It affects subsequent incremental indexing even if the old
+backend index remains untouched. Record this operational effect and arrange a
+consistent final active index/state. Do not reset unrelated providers.
+
+Do **not** use an unscoped `fulltextsearch:reset`: the backend's full reset deletes
+both the configured index and the global `attachment` pipeline. The pipeline is
+shared, not a disposable per-index resource.
+
+P0 lacks the explicit initialize command. Its initializer can overwrite the shared
+pipeline, and its failure recovery can delete that pipeline and the target index.
+For a non-destructive P0 indexing comparison with an existing pipeline, create the
+fresh target using P0's `IndexMappingService::generateGlobalMap()` through the
+configured client. Verify the existing attachment pipeline before and after using
+a digest. P0 then sees the index and skips provisioning. This tests P0 indexing
+against the same existing pipeline; it does **not** validate P0's historical
+pipeline-creation behavior. Do not create a blank dynamically mapped index.
+
+For that historical comparison only, after selecting the disposable P0 index,
+save the following as a temporary PHP script and run it as the OCC account. Adjust
+the Nextcloud root and target to the recorded test environment. This uses internal
+APIs and is not a replacement for the current supported initialize command:
+
+```php
+<?php
+define('OC_CONSOLE', true);
+require '/var/www/cxcloud/lib/base.php';
+$target = 'nextcloud34-ab-p0-issue15';
+$config = \OCP\Server::get(\OCA\FullTextSearch_OpenSearch\Service\ConfigService::class);
+if ($config->getOpenSearchIndex() !== $target) {
+    throw new \RuntimeException('Unexpected configured index');
+}
+$platform = \OCP\Server::get(\OCA\FullTextSearch_OpenSearch\Platform\OpenSearchPlatform::class);
+$platform->loadPlatform();
+$client = (new \ReflectionMethod($platform, 'getClient'))->invoke($platform);
+if ($client->indices()->exists(['index' => $target])) {
+    throw new \RuntimeException('Target already exists; do not reuse it');
+}
+$pipeline = $client->ingest()->getPipeline(['id' => 'attachment']);
+if (!isset($pipeline['attachment'])) {
+    throw new \RuntimeException('Existing shared pipeline required');
+}
+echo 'pipeline_sha256=' . hash('sha256', json_encode($pipeline)) . PHP_EOL;
+$mapping = \OCP\Server::get(\OCA\FullTextSearch_OpenSearch\Service\IndexMappingService::class);
+$client->indices()->create($mapping->generateGlobalMap());
+```
+
+## Measure the whole path
+
+Run the focused transport regression check on the configured Nextcloud test
+installation as the OCC account:
+
+```bash
+sudo -u apache php apps/fulltextsearch_opensearch/tests/Runtime/TemporaryPlatformFailure.php
+```
+
+If the checkout is outside the installation's `apps` directory, set
+`NEXTCLOUD_ROOT` to the installation root for the PHP process. The check uses the
+installed core's exception-catching behavior and a fake OpenSearch client. It
+tests initial-request and contentless-fallback node exhaustion without changing
+cluster availability or writing documents/indexing state. Both cases must pass.
+Development OCP stubs alone can conceal a namespace mismatch with the installed
+Nextcloud/Full Text Search combination.
+
+A real temporary platform failure may interrupt a full run. Record the failure,
+exit, runner-lock state, and retry commands; do not silently count an interrupted
+run as complete. If PHP terminated without clearing its lock, verify that the
+test process is no longer running before using `fulltextsearch:stop`. That command
+stops all active indexing, so verify that no unrelated runner is active first.
+
+Record per code state:
+
+- Exact SHA, versions, selected index, reset/provisioning/indexing commands, exit
+  status, and whether normal command execution or a measurement wrapper was used.
+- Users/chunks traversed; document offers and distinct provider/document IDs;
+  documents selected after state filtering; documents filled and submitted;
+  success, warning/fallback, failure, and skip counts where observable. Mark any
+  unmeasured count explicitly. Separate repeat offers from actual overwrites.
+- Runner error/result callbacks and time-bounded Nextcloud log observations.
+  A zero command exit status is insufficient: the core command catches some
+  per-user exceptions, and the core service catches some per-document exceptions.
+  The runner's stored `totalDocuments` is not a reliable count in core 34.0.1
+  (`RunningService::stop()` writes the constant 42).
+- After indexing, refresh the disposable index, query `_count`, and count the
+  `files` provider separately if any other documents exist. Compare distinct IDs
+  as well as totals. Retain only redacted aggregates in committed evidence.
+
+The OpenSearch backend submits individual requests with IDs
+`<provider>:<document-id>`. Encoded nonempty content invokes `attachment` ingest.
+A failed content request may be retried without content: warning results and
+nonempty-content checks matter even when final document counts look correct.
+Temporary platform failures should abort/retry; record permanent rejection reasons
+and provider errors without exposing source documents.
+
+If only a small subset is submitted in both revisions, investigate provider/state
+selection first. If thousands are submitted but only a small subset persists,
+inspect rejection, fallback, permission, pipeline, mapping, and ID evidence. If
+only current code fails under equivalent conditions, isolate the changed range.
+An old Elasticsearch count is a clue, not the expected number: compare current
+provider IDs and stale/deleted records when practical without changing that index.
+
+## Validate document shape and content
+
+Inspect ordinary text, extracted PDF/office content, and a shared/group document.
+Check `_id`, `provider`, `title`, nonempty expected `content`, `owner`, `users`,
+`groups`, `circles`, `links`, and `lastModified` where supported. P0 predates
+`lastModified`; record that expected difference. Empty access arrays are valid for
+unshared files; verify actual entries against the file's real sharing state.
+Record field presence/types, content lengths, and anonymized sample labels, not
+personal contents. Count and inspect contentless fallback documents separately.
+
+## Browser search and access-control acceptance
+
+With the populated current index selected and current PHP active, use Nextcloud's
+normal **Full Text Search** results, not merely the filename-only Files provider:
+
+1. Search a known filename, a word inside a plain-text file, and a word inside a
+   PDF/office file. Repeat a content query with different case.
+2. Verify expected titles, useful excerpts/highlights, and links opening the
+   correct object. Record the request/result and relevant console/network/log
+   errors without recording cookies or credentials.
+3. As the intended user, verify an owned/visible document and a shared/group-visible
+   document appear. Verify a known inaccessible document does not appear; also
+   verify that document is indexed/searchable by its authorized owner so that
+   absence cannot be explained by failed indexing.
+4. Keep existing permissions unchanged. If controlled fixtures/accounts are needed,
+   identify them as disposable and record their creation, exact visibility, and
+   cleanup. Do not weaken real-user permissions.
+5. If browser tooling cannot reach the existing session, finish server-side checks
+   and request only these remaining interactions from the operator. Record the
+   operator's exact observations; do not label unobserved checks as passes.
+
+## Completion and cleanup
+
+Keep synthetic, provider, population, GUI, and ACL results separate. A populated
+index or passing synthetic test cannot stand in for GUI/ACL acceptance. Document
+remaining hypotheses and missing evidence. Restore the original configuration or
+explicitly record the agreed test configuration left active; keep database state
+consistent with it. Only delete indexes whose task creation was verified, and
+never delete the shared pipeline as index cleanup. Leave the issue branch for
+independent review; every issue-specific commit must reference #15.

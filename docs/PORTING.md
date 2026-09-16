@@ -439,6 +439,42 @@ The behavior differs from copying Elasticsearch `stable34` mechanically. The ups
 
 See `docs/ADMINISTRATION.md` for the complete workflow.
 
+# Issue #15 — Real-provider acceptance investigation
+
+The immutable comparison pair is P0 merge
+`47a94641601048dcdff2b9ae69b20bdce50f769a` and current integration commit
+`0f901480d58fa497eb7f3265c6026c7d84db092b`. P1 was incorporated by the intervening
+squashed commit `70d28922779a9981151c11bbc65e1f81816b3171`; historical feature
+branch pointers are not required.
+
+Real Files enumeration and persisted core indexing state are separate from the
+backend index. Selecting a fresh backend index does not itself force existing
+provider documents to be resubmitted. The old Elasticsearch reference is also
+not ground truth: the #15 read-only comparison found 234 reference Files IDs
+without a current Nextcloud file-cache row.
+
+The investigation also found a P1 temporary-failure regression: NC34 on the test
+host does not provide `OCP\FullTextSearch\Exceptions\PlatformTemporaryException`,
+while Full Text Search 34.0.1 catches its own
+`OCA\FullTextSearch\Exceptions\PlatformTemporaryException`. Node exhaustion could
+therefore produce a PHP class-not-found error instead of the intended recoverable
+runner exception. The #15 fix uses the exception actually caught by that runner;
+a runtime regression check covers both the initial request and contentless retry.
+This is a generic Nextcloud compatibility correction, preserving the OpenSearch
+client's `NoNodesAvailableException` translation. The installed Elasticsearch
+34.0.1 reference uses the unavailable OCP name too; copying it would not establish
+compatibility with the actual host.
+
+The clean fixed run and P0 each indexed the same 8,568 document IDs; all stored
+fields match except the expected addition of `lastModified`. Two extraction
+fallbacks and the filename-only case mismatch reproduce on P0. Browser acceptance
+still requires operator observations.
+
+See [the evidence report](ISSUE-15-ACCEPTANCE.md) for runtime results, limitations,
+and acceptance status, and [the durable procedure](TESTING.md#real-provider-end-to-end-acceptance-15)
+for repeatable provider, population, browser, and access-control checks. Synthetic
+contract tests alone do not establish end-to-end acceptance.
+
 # P2 — OpenSearch Client, TLS, Authentication, and Build Tooling
 
 **Status: Planned**

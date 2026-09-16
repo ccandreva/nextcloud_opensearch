@@ -69,3 +69,37 @@ sudo -u apache php occ fulltextsearch:test
 This test writes and removes synthetic documents. It is useful after provisioning but should not be used as the provisioning mechanism for a restricted account because its cleanup requires delete-by-query access.
 
 The core indexing and test runners also call the platform's `initializeIndex()` hook. As with the explicit command, that hook leaves existing resources untouched and provisions either resource when it is missing.
+
+## Populating a replacement index
+
+Changing `opensearch_index` and initializing its mappings does not reset Nextcloud's
+Full Text Search indexing state. The core stores state by provider, document, and
+collection, not by OpenSearch index name. An ordinary indexing run can therefore
+skip documents as up-to-date even when the newly selected backend index is empty.
+The `force` option also leaves the earlier ignored-document and retained-error
+checks in effect.
+
+Plan a full provider rebuild when selecting a replacement index. For controlled
+acceptance testing, select and initialize a verified disposable index first, then
+use `fulltextsearch:reset --provider files` followed by
+`fulltextsearch:index --no-readline '{"provider":"files"}'`. The provider reset
+deletes Files documents in the selected backend **and** the shared Files indexing
+state in Nextcloud; verify the target before confirming it. Do not use this as a
+casual diagnostic against an existing reference or production index.
+
+An unscoped reset also deletes the global `attachment` pipeline. That pipeline
+is shared across indexes and must not be removed as disposable-index cleanup.
+When returning to a previous index, account for the indexing-state changes made
+during testing; changing the index name back alone does not restore prior state.
+
+Verify real provider counts, content extraction, normal browser search, and access
+control separately from `fulltextsearch:test`. A document can remain searchable
+by metadata after failed extraction is retried without content. See the
+[end-to-end procedure](TESTING.md#real-provider-end-to-end-acceptance-15) and
+[issue #15 evidence](ISSUE-15-ACCEPTANCE.md).
+
+If a temporary platform outage interrupts indexing, restore connectivity and
+rerun the indexing command against the **same** target index to process remaining
+work. Record the interruption and verify final population; an interrupted run
+does not establish acceptance. A stale process lock should only be cleared after
+confirming that the process has exited and no unrelated indexer is running.
