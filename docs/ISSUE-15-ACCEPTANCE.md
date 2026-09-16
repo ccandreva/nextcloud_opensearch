@@ -375,9 +375,19 @@ it for the user whose file tree lacked access. Positive results contained titles
 links, and excerpts. These checks used isolated CLI session contexts, with no
 changes to stored accounts, shares, or permissions.
 
-The filename-only mixed-case mismatch remained reproducible on fixed code. A
-repeat of the combined filename/content probe was declined at command approval
-and was not rerun; the earlier P0 and unmodified-current combined probes passed.
+The filename-only mixed-case mismatch remained reproducible on fixed code. After
+an accidental command-approval denial, the operator authorized the combined
+filename/content probe again. That rerun returned one result but **missed the
+expected file**. Its anonymized sample ID was
+`d2d0f0e53749982b1ddb2f36792cd2fa1469f9876346a6895a946cc0d91781bb`.
+Read-only probes of this same ID in both P0 and fixed indexes returned identical
+counts: original-case title wildcard 1, lowercased title wildcard 0, and content
+match for the filename token 0. The earlier P0 and unmodified-current combined
+probes passed for their selected samples; sample selection is not fixed across
+indexes. Those passes do not establish that combined searches avoid the defect.
+The pre-existing title case mismatch can also make a normal combined search miss
+a file when its content does not supply a match. This is a confirmed search
+limitation, not a passing filename acceptance check.
 Server-side presence of a result link or excerpt does not establish browser link
 correctness or visual highlight quality.
 

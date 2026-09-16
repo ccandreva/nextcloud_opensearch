@@ -467,7 +467,8 @@ compatibility with the actual host.
 
 The clean fixed run and P0 each indexed the same 8,568 document IDs; all stored
 fields match except the expected addition of `lastModified`. Two extraction
-fallbacks and the filename-only case mismatch reproduce on P0. Browser acceptance
+fallbacks and the title case mismatch reproduce on P0. The title mismatch can
+also affect combined searches when content does not match. Browser acceptance
 still requires operator observations.
 
 See [the evidence report](ISSUE-15-ACCEPTANCE.md) for runtime results, limitations,
