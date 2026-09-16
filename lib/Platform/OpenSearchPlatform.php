@@ -33,6 +33,7 @@ namespace OCA\FullTextSearch_OpenSearch\Platform;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\FullTextSearch\Exceptions\PlatformTemporaryException;
 use OCA\FullTextSearch_OpenSearch\ConfigLexicon;
 use OCA\FullTextSearch_OpenSearch\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_OpenSearch\Exceptions\ClientException;
@@ -45,7 +46,6 @@ use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Client;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\ClientBuilder;
 use OCA\FullTextSearch_OpenSearch\Vendor\OpenSearch\Common\Exceptions\NoNodesAvailableException;
 use OCP\AppFramework\Services\IAppConfig;
-use OCP\FullTextSearch\Exceptions\PlatformTemporaryException;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
 use OCP\FullTextSearch\Model\IDocumentAccess;
 use OCP\FullTextSearch\Model\IIndex;
