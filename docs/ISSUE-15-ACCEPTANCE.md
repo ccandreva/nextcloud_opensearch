@@ -391,16 +391,30 @@ limitation, not a passing filename acceptance check.
 Server-side presence of a result link or excerpt does not establish browser link
 correctness or visual highlight quality.
 
-## Browser acceptance and remaining evidence
+## Browser acceptance — operator verified
 
-Browser automation inventory exposed no apps or browsers. The operator was asked
-to check the populated fixed index in Firefox: known filename, plain text,
-PDF/Office content and case variants; correct titles/excerpts and links opening the
-intended objects; owned/shared positives and an inaccessible negative; any console
-or network errors. No observations have yet been supplied for these checks.
-Therefore GUI search, actual link opening, visual excerpts, and browser-level
-access-control acceptance remain unverified. Server-side ACL checks passed as
-recorded above; they are not substituted for the requested GUI evidence.
+Browser automation inventory exposed no apps or browsers, so the operator
+performed the requested tests in the browser against the populated fixed index.
+The operator reported these results:
+
+| Browser check | Operator observation |
+| --- | --- |
+| Known filename | Expected file found |
+| Plain-text content | Expected file found |
+| Word in a PDF | Expected file found |
+| Word in an ODF | Expected file found |
+| Word in a DOCX | Expected file found |
+| Case variant | Searching `zest` found a document containing `Zest` |
+| Shared access | Files shared by another user were found |
+| Inaccessible files | No files that were not shared appeared |
+| Result opening | Files opened in the expected location using the expected plugin |
+
+The operator explicitly stated: "I am satisifed this passes browser tests."
+This supplies manual browser search, result-opening, and access-control acceptance
+in addition to the independent server-side checks. The report does not infer a
+separate visual title/highlight assessment or console/network inspection: those
+observations were not individually reported. The successful filename sample does
+not invalidate the separate, reproducible title case limitation documented above.
 
 ## Diagnosis, follow-ups, and handoff
 
@@ -414,8 +428,8 @@ the exact invocation/state that produced 154 is unavailable, so its cause remain
 unproven. The discovered temporary-failure regression is independently demonstrated
 and fixed, without claiming it caused that historical count.
 
-Recommend separate focused follow-ups for the pre-existing filename-only case
-mismatch and the two reproducible attachment extraction failures. Provider stat
+Recommend separate focused follow-ups for the pre-existing title case
+mismatch (including combined searches without a content match) and the two reproducible attachment extraction failures. Provider stat
 warnings and the external node-exhaustion event may merit provider/environment
 investigation if repeated. No unrelated fixes or new GitHub issues were made.
 
@@ -432,7 +446,7 @@ Resources retained for review:
 - `nextcloud34-ab-p0-issue15`: 8,568 documents; disposable and inactive.
 - `nextcloud34-ab-current-issue15`: 4,489 documents; disposable interrupted run.
 - `nextcloud34-ab-fixed-issue15`: 8,568 documents; **selected active index**, matching
-  rebuilt Files core state. Keep it for browser acceptance. Remove only after
+  rebuilt Files core state. Browser acceptance is complete. Remove only after
   choosing a replacement and accounting for provider state.
 - `/tmp/issue15-*`: credential-free measurement helpers; removable after review.
 
@@ -442,5 +456,7 @@ were not written or deleted. Files indexing state was intentionally rebuilt;
 Deck's three state rows were retained. No user files, permissions, system packages,
 or system-wide configuration were changed by this work.
 
-**Acceptance remains incomplete** — the missing evidence is the operator's actual
-Firefox search, link/excerpt, and access-control observations described above.
+**Current-code regression identified and fixed** — the clean real-provider run,
+focused regression tests, synthetic contract tests, server-side searches, and
+operator browser acceptance are complete. The pre-existing search/extraction
+limitations remain documented for separate follow-up; the branch is unmerged.

@@ -468,8 +468,10 @@ compatibility with the actual host.
 The clean fixed run and P0 each indexed the same 8,568 document IDs; all stored
 fields match except the expected addition of `lastModified`. Two extraction
 fallbacks and the title case mismatch reproduce on P0. The title mismatch can
-also affect combined searches when content does not match. Browser acceptance
-still requires operator observations.
+also affect combined searches when content does not match. The operator completed
+browser acceptance for filename, plain-text/PDF/ODF/DOCX content, case variants,
+shared visibility, inaccessible-file exclusion, and correct result opening. The
+current-code regression is fixed; the branch remains subject to independent review.
 
 See [the evidence report](ISSUE-15-ACCEPTANCE.md) for runtime results, limitations,
 and acceptance status, and [the durable procedure](TESTING.md#real-provider-end-to-end-acceptance-15)
