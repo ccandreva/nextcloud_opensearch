@@ -1,0 +1,12 @@
+diff --git a/lib/Service/ConfigService.php b/lib/Service/ConfigService.php
+--- a/lib/Service/ConfigService.php
++++ b/lib/Service/ConfigService.php
+@@ -36,7 +36,7 @@ class ConfigService {
+ 		foreach (array_keys($save) as $k) {
+ 			switch ($k) {
+ 				case ConfigLexicon::APP_NAVIGATION:
+-					$this->appConfig->setAppValueBool($k, $save[$k]);
++					$this->appConfig->setAppValueBool($k, (bool)$save[$k]);
+ 					break;
+ 
+ 				case ConfigLexicon::SEARCH_PLATFORM:

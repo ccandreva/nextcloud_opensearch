@@ -836,6 +836,14 @@ independent review; every issue-specific commit must reference #15.
 Browser acceptance remains manual. Use disposable values and redact credentials,
 cookies, request tokens, and personal data from any recorded evidence.
 
+The observed 500 on the main Full Text Search settings POST is caused by the
+installed `fulltextsearch` 34.0.1 service passing numeric `app_navigation` to
+`setAppValueBool()`. Its current stable34 source casts the value to `bool`.
+`ISSUE-21-FULLTEXTSEARCH-HOTFIX.patch` applies that upstream correction to the
+installed app. This is a separate app and is not changed by the OpenSearch commit.
+After applying that patch, repeat steps 1–3 and confirm a successful POST and
+persisted platform and Navigation Icon state after reload.
+
 1. Select Elasticsearch, reload the administration page, and verify its settings
    are visible while OpenSearch settings are hidden. Select OpenSearch, reload,
    and verify the reverse.
