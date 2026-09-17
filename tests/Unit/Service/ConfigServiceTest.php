@@ -101,4 +101,14 @@ class ConfigServiceTest extends TestCase
         $this->assertStringNotContainsString('secret', json_encode($result));
         $this->assertStringNotContainsString('other', json_encode($result));
     }
+
+    public function testPartialUpdateDoesNotWriteStoredHost(): void
+    {
+        $this->configMock->expects($this->never())->method('setAppValueString');
+        $this->configMock->expects($this->once())
+            ->method('setAppValueInt')
+            ->with(ConfigLexicon::FIELDS_LIMIT, 12000);
+
+        $this->configService->setConfig([ConfigLexicon::FIELDS_LIMIT => '12000']);
+    }
 }

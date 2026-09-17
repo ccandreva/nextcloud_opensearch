@@ -12,7 +12,7 @@ sudo -u apache php occ fulltextsearch_opensearch:configure '{"opensearch_host":"
 
 Treat shell history and process listings as sensitive when credentials are embedded in a command. Running the command without a JSON argument prints the current configuration with host passwords masked.
 
-The browser administration page uses the same configuration keys as the command. For safety, it receives OpenSearch host URLs with their complete user-information component removed. The displayed scheme, host, port, and path still identify the configured endpoint. Saving other settings leaves the stored host, including its credentials, unchanged. To change a host or its credentials, replace the host field with the complete new URL before saving.
+The browser administration page uses the same configuration keys as the command. Text and number fields save when you leave the field; checkboxes save when changed. A status message reports success or failure. For safety, the page receives OpenSearch host URLs with their complete user-information component removed. The displayed scheme, host, port, and path still identify the configured endpoint. Changing another setting leaves the stored host, including its credentials, unchanged. To change a host or its credentials, replace the host field with the complete new URL and leave the field. Restoring the displayed host before leaving it does not replace stored credentials.
 
 ## Initialize OpenSearch resources
 

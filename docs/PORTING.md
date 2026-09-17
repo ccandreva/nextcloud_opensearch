@@ -26,6 +26,15 @@ For the Nextcloud 34 port:
 
 `nextcloud/fulltextsearch_elasticsearch:stable34`
 
+The Full Text Search stable34 administration frontend stores `search_platform` as
+the selected platform class name. After initial loading and each settings POST,
+it publishes `{ platform, providers }` through both
+`window.OCA.FullTextSearch.settings` and the
+`fulltextsearch:settings-admin-updated` window event. `platform` is the selected
+platform's `getId()` value, or an empty string. Platform settings pages use the
+global for initial visibility because independently loaded scripts may miss the
+first event, then listen for the event when the selection changes.
+
 The OpenSearch fork and Elasticsearch upstream share a historical common ancestor:
 
 `9138dd7129c85f67d8794abff79276e05f3b6b97`

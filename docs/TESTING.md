@@ -831,3 +831,36 @@ explicitly record the agreed test configuration left active; keep database state
 consistent with it. Only delete indexes whose task creation was verified, and
 never delete the shared pipeline as index cleanup. Leave the issue branch for
 independent review; every issue-specific commit must reference #15.
+# Nextcloud 34 administration settings acceptance (#21)
+
+Browser acceptance remains manual. Use disposable values and redact credentials,
+cookies, request tokens, and personal data from any recorded evidence.
+
+1. Select Elasticsearch, reload the administration page, and verify its settings
+   are visible while OpenSearch settings are hidden. Select OpenSearch, reload,
+   and verify the reverse.
+2. Without reloading, switch Elasticsearch → OpenSearch → Elasticsearch. Verify
+   the two settings sections alternate visibility at each step. Select OpenSearch
+   again for the remaining checks.
+3. Change the main Full Text Search Navigation Icon setting. In Network, inspect
+   `POST /apps/fulltextsearch/admin/settings`: request data should contain
+   `app_navigation` and the selected `search_platform` class name. Record the
+   HTTP status and response; reload to verify persistence. If it fails, record
+   the console error, URL, status, sanitized request/response, and matching
+   `nextcloud.log` entry. Check the platform dropdown by the same method.
+4. Change each OpenSearch field in turn: host, index, fields limit, analyzer
+   tokenizer (leave each field), logging, and self-signed TLS (toggle each).
+   Verify a `POST /apps/fulltextsearch_opensearch/admin/settings` containing
+   only the changed key, visible success feedback, and persistence after reload.
+   There should be no general OpenSearch Save button.
+5. On a disposable host, configure a credential-bearing URL through OCC. Reload
+   and verify user information is absent from the host field, rendered initial
+   state, GET/POST responses, and console. Change only a non-host field, then
+   inspect the stored host with the OCC configuration command and verify
+   connectivity. It must retain the credentials. Edit the host and restore its
+   original displayed value before leaving the field; verify no host POST and
+   no credential loss. Finally replace it intentionally and verify the new host
+   persists. Never commit real credentials.
+6. Enter an invalid disposable host or index, leave the field, and verify useful
+   validation feedback and that stored valid configuration remains intact.
+   Check that console output and server logs do not expose credentials.

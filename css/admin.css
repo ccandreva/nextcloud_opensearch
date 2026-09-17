@@ -2,6 +2,10 @@
 	max-width: 700px;
 }
 
+.fulltextsearch-opensearch-settings[hidden] {
+	display: none;
+}
+
 .fulltextsearch-opensearch-settings .settings-field {
 	margin-bottom: 18px;
 }

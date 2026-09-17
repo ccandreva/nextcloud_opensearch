@@ -19,10 +19,16 @@
 		['fields_limit', t(app, 'Fields limit'), 'number', t(app, 'Maximum number of fields in the index.')],
 		['analyzer_tokenizer', t(app, 'Analyzer tokenizer'), 'text', t(app, 'Tokenizer used by the OpenSearch analyzer.')],
 	]
-	let hostChanged = false
+	const saved = {...config}
+	let pendingSave = Promise.resolve()
+	const settingsEvent = 'fulltextsearch:settings-admin-updated'
+	const updateVisibility = (detail) => {
+		section.hidden = detail?.platform !== 'open_search'
+	}
 
 	const section = document.createElement('div')
 	section.className = 'section fulltextsearch-opensearch-settings'
+	section.hidden = true
 	const heading = document.createElement('h2')
 	heading.textContent = t(app, 'OpenSearch')
 	section.appendChild(heading)
@@ -40,8 +46,8 @@
 		input.value = config[key]
 		input.addEventListener('input', () => {
 			input.removeAttribute('aria-invalid')
-			if (key === 'opensearch_host') hostChanged = true
 		})
+		input.addEventListener('blur', () => saveField(key, input.value))
 		const hint = document.createElement('span')
 		hint.className = 'settings-hint'
 		hint.textContent = hintText
@@ -60,6 +66,7 @@
 		input.name = key
 		input.type = 'checkbox'
 		input.checked = Boolean(config[key])
+		input.addEventListener('change', () => saveField(key, input.checked))
 		const label = document.createElement('label')
 		label.htmlFor = key
 		label.append(input, document.createTextNode(' ' + labelText))
@@ -67,47 +74,45 @@
 		section.appendChild(wrapper)
 	}
 
-	const button = document.createElement('button')
-	button.type = 'button'
-	button.className = 'primary'
-	button.textContent = t(app, 'Save')
 	const status = document.createElement('span')
 	status.className = 'settings-status'
 	status.setAttribute('aria-live', 'polite')
-	section.append(button, status)
+	section.appendChild(status)
 	mount.appendChild(section)
+	window.addEventListener(settingsEvent, (event) => updateVisibility(event.detail))
+	updateVisibility(window.OCA?.FullTextSearch?.settings)
 
-	button.addEventListener('click', async () => {
-		button.disabled = true
+	function saveField(key, value) {
+		// The host shown in the browser has no user information. Submitting it
+		// unchanged would replace credentials stored on the server.
+		if (String(value) === String(saved[key])) return
+		pendingSave = pendingSave.then(() => persistField(key, value))
+	}
+
+	async function persistField(key, value) {
 		status.textContent = t(app, 'Saving…')
-		const data = {}
-		for (const [key] of fields) {
-			if (key !== 'opensearch_host' || hostChanged) data[key] = document.getElementById(key).value
-		}
-		data.opensearch_logger_enabled = document.getElementById('opensearch_logger_enabled').checked
-		data.allow_self_signed_cert = document.getElementById('allow_self_signed_cert').checked
-
 		try {
 			const response = await fetch(OC.generateUrl('/apps/fulltextsearch_opensearch/admin/settings'), {
 				method: 'POST',
 				headers: {'Content-Type': 'application/json', requesttoken: OC.requestToken},
-				body: JSON.stringify({data}),
+				body: JSON.stringify({data: {[key]: value}}),
 			})
 			const result = await response.json()
 			if (!response.ok) {
-				for (const key of result) document.getElementById(key)?.setAttribute('aria-invalid', 'true')
+				if (Array.isArray(result)) {
+					for (const invalidKey of result) document.getElementById(invalidKey)?.setAttribute('aria-invalid', 'true')
+				}
 				throw new Error('validation')
 			}
-			config.opensearch_host = result.opensearch_host
-			document.getElementById('opensearch_host').value = result.opensearch_host
-			hostChanged = false
+			saved[key] = result[key]
+			if (key === 'opensearch_host' && document.getElementById(key).value === value) {
+				document.getElementById(key).value = result[key]
+			}
 			status.textContent = t(app, 'Saved')
 		} catch (error) {
 			status.textContent = error.message === 'validation'
 				? t(app, 'Please correct the highlighted settings.')
 				: t(app, 'Could not save the OpenSearch settings.')
-		} finally {
-			button.disabled = false
 		}
-	})
+	}
 })()
