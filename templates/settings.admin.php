@@ -32,7 +32,7 @@ declare(strict_types=1);
 use OCA\FullTextSearch_OpenSearch\AppInfo\Application;
 use OCP\Util;
 
-Util::addScript(Application::APP_NAME, 'admin-settings');
+Util::addScript(Application::APP_NAME, 'admin.settings');
 Util::addStyle(Application::APP_NAME, 'admin');
 ?>
 <div id="fulltextsearch-opensearch-admin-settings"></div>

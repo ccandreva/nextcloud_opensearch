@@ -1,101 +1,118 @@
 /*
  * FullTextSearch_OpenSearch - Use OpenSearch to index the content of your nextcloud
  *
- * This file is licensed under the Affero General Public License version 3 or
- * later. See the COPYING file.
- *
- * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
  * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
+(function () {
+	'use strict'
 
-/** global: OC */
-/** global: opensearch_elements */
-/** global: fts_admin_settings */
-
-
-
-
-var opensearch_settings = {
-
-	config: null,
-
-	refreshSettingPage: function () {
-
-		$.ajax({
-			method: 'GET',
-			url: OC.generateUrl('/apps/fulltextsearch_opensearch/admin/settings')
-		}).done(function (res) {
-			opensearch_settings.updateSettingPage(res);
-		});
-
-	},
-
-	/** @namespace result.opensearch_host */
-	/** @namespace result.opensearch_index */
-	updateSettingPage: function (result) {
-
-		opensearch_elements.opensearch_host.val(result.opensearch_host);
-		opensearch_elements.opensearch_index.val(result.opensearch_index);
-		opensearch_elements.analyzer_tokenizer.val(result.analyzer_tokenizer);
-
-		fts_admin_settings.tagSettingsAsSaved(opensearch_elements.opensearch_div);
-	},
-
-
-	markInputField: function (input, mark=true) {
-		input.css('border-color', mark ? '#d00' : '#ccc');
-	},
-
-	saveSettings: function () {
-
-		var data = {
-			opensearch_host: opensearch_elements.opensearch_host.val(),
-			opensearch_index: opensearch_elements.opensearch_index.val(),
-			analyzer_tokenizer: opensearch_elements.analyzer_tokenizer.val()
-		};
-
-		if(data.opensearch_host === '') {
-			opensearch_settings.markInputField(opensearch_elements.opensearch_host, true);
-		}
-		if(data.opensearch_index === '') {
-			opensearch_settings.markInputField(opensearch_elements.opensearch_index, true);
-		}
-
-		if( data.opensearch_host !== '' && data.opensearch_index !== '' ) {
-			$.ajax({
-				method: 'POST',
-				url: OC.generateUrl('/apps/fulltextsearch_opensearch/admin/settings'),
-				data: {
-					data: data
-				}
-			}).done(function (res, textStatus, xhr) {
-				opensearch_settings.updateSettingPage(res);
-				opensearch_settings.markInputField(opensearch_elements.opensearch_host, false);
-				opensearch_settings.markInputField(opensearch_elements.opensearch_index, false);
-			}).fail(function (xhr, textStatus, errorThrown) {
-				if (xhr.responseJSON instanceof Array) {
-					xhr.responseJSON.forEach(function (value, index, array) {
-						opensearch_settings.markInputField($('#' + value), true);
-					});
-				}
-			});
-		}
+	const app = 'fulltextsearch_opensearch'
+	const mount = document.getElementById('fulltextsearch-opensearch-admin-settings')
+	if (!mount) {
+		return
 	}
 
+	const config = OCP.InitialState.loadState(app, 'admin-config')
+	const fields = [
+		['opensearch_host', t(app, 'OpenSearch hosts'), 'text', t(app, 'Comma-separated HTTP(S) URLs. Stored credentials are not sent to the browser; enter credentials again only when changing this field.')],
+		['opensearch_index', t(app, 'Index'), 'text', t(app, 'Name of the OpenSearch index.')],
+		['fields_limit', t(app, 'Fields limit'), 'number', t(app, 'Maximum number of fields in the index.')],
+		['analyzer_tokenizer', t(app, 'Analyzer tokenizer'), 'text', t(app, 'Tokenizer used by the OpenSearch analyzer.')],
+	]
+	const saved = {...config}
+	let pendingSave = Promise.resolve()
+	const settingsEvent = 'fulltextsearch:settings-admin-updated'
+	const updateVisibility = (detail) => {
+		section.hidden = detail?.platform !== 'open_search'
+	}
 
-};
+	const section = document.createElement('div')
+	section.className = 'section fulltextsearch-opensearch-settings'
+	section.hidden = true
+	const heading = document.createElement('h2')
+	heading.textContent = t(app, 'OpenSearch')
+	section.appendChild(heading)
+
+	for (const [key, labelText, type, hintText] of fields) {
+		const wrapper = document.createElement('div')
+		wrapper.className = 'settings-field'
+		const label = document.createElement('label')
+		label.htmlFor = key
+		label.textContent = labelText
+		const input = document.createElement('input')
+		input.id = key
+		input.name = key
+		input.type = type
+		input.value = config[key]
+		input.addEventListener('input', () => {
+			input.removeAttribute('aria-invalid')
+		})
+		input.addEventListener('blur', () => saveField(key, input.value))
+		const hint = document.createElement('span')
+		hint.className = 'settings-hint'
+		hint.textContent = hintText
+		wrapper.append(label, input, hint)
+		section.appendChild(wrapper)
+	}
+
+	for (const [key, labelText] of [
+		['opensearch_logger_enabled', t(app, 'Enable OpenSearch logging')],
+		['allow_self_signed_cert', t(app, 'Allow self-signed TLS certificates')],
+	]) {
+		const wrapper = document.createElement('div')
+		wrapper.className = 'settings-field'
+		const input = document.createElement('input')
+		input.id = key
+		input.name = key
+		input.type = 'checkbox'
+		input.checked = Boolean(config[key])
+		input.addEventListener('change', () => saveField(key, input.checked))
+		const label = document.createElement('label')
+		label.htmlFor = key
+		label.append(input, document.createTextNode(' ' + labelText))
+		wrapper.appendChild(label)
+		section.appendChild(wrapper)
+	}
+
+	const status = document.createElement('span')
+	status.className = 'settings-status'
+	status.setAttribute('aria-live', 'polite')
+	section.appendChild(status)
+	mount.appendChild(section)
+	window.addEventListener(settingsEvent, (event) => updateVisibility(event.detail))
+	updateVisibility(window.OCA?.FullTextSearch?.settings)
+
+	function saveField(key, value) {
+		// The host shown in the browser has no user information. Submitting it
+		// unchanged would replace credentials stored on the server.
+		if (String(value) === String(saved[key])) return
+		pendingSave = pendingSave.then(() => persistField(key, value))
+	}
+
+	async function persistField(key, value) {
+		status.textContent = t(app, 'Saving…')
+		try {
+			const response = await fetch(OC.generateUrl('/apps/fulltextsearch_opensearch/admin/settings'), {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json', requesttoken: OC.requestToken},
+				body: JSON.stringify({data: {[key]: value}}),
+			})
+			const result = await response.json()
+			if (!response.ok) {
+				if (Array.isArray(result)) {
+					for (const invalidKey of result) document.getElementById(invalidKey)?.setAttribute('aria-invalid', 'true')
+				}
+				throw new Error('validation')
+			}
+			saved[key] = result[key]
+			if (key === 'opensearch_host' && document.getElementById(key).value === value) {
+				document.getElementById(key).value = result[key]
+			}
+			status.textContent = t(app, 'Saved')
+		} catch (error) {
+			status.textContent = error.message === 'validation'
+				? t(app, 'Please correct the highlighted settings.')
+				: t(app, 'Could not save the OpenSearch settings.')
+		}
+	}
+})()
