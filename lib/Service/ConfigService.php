@@ -118,10 +118,12 @@ class ConfigService {
 
 	public function checkConfig(array $data): array {
 		$errors = [];
-		if (!$this->isValidHost($data[ConfigLexicon::OPENSEARCH_HOST] ?? null)) {
+		if (array_key_exists(ConfigLexicon::OPENSEARCH_HOST, $data)
+			&& !$this->isValidHost($data[ConfigLexicon::OPENSEARCH_HOST])) {
 			$errors[] = ConfigLexicon::OPENSEARCH_HOST;
 		}
-		if (!$this->isValidIndex($data[ConfigLexicon::OPENSEARCH_INDEX] ?? null)) {
+		if (array_key_exists(ConfigLexicon::OPENSEARCH_INDEX, $data)
+			&& !$this->isValidIndex($data[ConfigLexicon::OPENSEARCH_INDEX])) {
 			$errors[] = ConfigLexicon::OPENSEARCH_INDEX;
 		}
 

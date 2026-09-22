@@ -79,9 +79,11 @@ class SettingsController extends Controller {
      */
 	final public function setSettingsAdmin(array $data): DataResponse {
 
-		// The frontend deliberately omits an unchanged host so stored credentials
-		// never need to make a browser round trip.
-		$errors = $this->configService->checkConfig(array_merge($this->configService->getConfig(), $data));
+		// Automatic saves contain only the changed field. Validate that patch so
+		// administrators can configure a fresh installation one field at a time.
+		// An omitted host must also stay omitted so stored credentials never need
+		// to make a browser round trip.
+		$errors = $this->configService->checkConfig($data);
 
         if (empty($errors)) {
             $this->configService->setConfig($data);

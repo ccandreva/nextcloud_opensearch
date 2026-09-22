@@ -872,3 +872,9 @@ persisted platform and Navigation Icon state after reload.
 6. Enter an invalid disposable host or index, leave the field, and verify useful
    validation feedback and that stored valid configuration remains intact.
    Check that console output and server logs do not expose credentials.
+7. On a fresh installation where host and index are both blank, enter a valid
+   host and leave the field. Verify that the one-field POST succeeds even though
+   the index is still blank. Then enter a valid index and verify that its POST
+   succeeds. Reload and confirm both values persisted. Also verify that changing
+   a non-connection field before host and index are configured does not receive
+   a validation error for either omitted field.

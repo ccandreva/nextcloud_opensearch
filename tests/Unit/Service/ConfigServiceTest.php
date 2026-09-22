@@ -32,7 +32,7 @@ class ConfigServiceTest extends TestCase
         $this->assertEmpty($result);
     }
 
-    public function testCheckConfigMissingRequiredKeys(): void
+    public function testCheckConfigAllowsPartialUpdateWithIndexOnly(): void
     {
         $invalidData = [
             ConfigLexicon::OPENSEARCH_INDEX => 'valid_index',
@@ -40,7 +40,25 @@ class ConfigServiceTest extends TestCase
 
         $result = $this->configService->checkConfig($invalidData);
 
-        $this->assertEquals([ConfigLexicon::OPENSEARCH_HOST], $result);
+        $this->assertEmpty($result);
+    }
+
+    public function testCheckConfigAllowsPartialUpdateWithHostOnly(): void
+    {
+        $result = $this->configService->checkConfig([
+            ConfigLexicon::OPENSEARCH_HOST => 'https://example.com',
+        ]);
+
+        $this->assertEmpty($result);
+    }
+
+    public function testCheckConfigAllowsUnrelatedUpdateWhenConnectionFieldsAreAbsent(): void
+    {
+        $result = $this->configService->checkConfig([
+            ConfigLexicon::FIELDS_LIMIT => 12000,
+        ]);
+
+        $this->assertEmpty($result);
     }
 
     public function testCheckConfigInvalidHostUrl(): void
