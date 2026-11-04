@@ -1,6 +1,6 @@
 # Full text search - OpenSearch
 
-_Fyll text search - OpenSearch_ is an extension to the _Full text search_
+_Full text search - OpenSearch_ is an extension to the _Full text search_
 framework.  It allows you to index your content with an OpenSearch platform. 
 It is a fork of the
 https://github.com/nextcloud/fulltextsearch_elasticsearch app to allow
