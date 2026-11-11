@@ -14,9 +14,9 @@ OpenSearch: 1.0.0-2.x.x
 
 OpenSearch was forked in 2021 due to a change of the ElasticSearch license, 
 whereas OpenSearch is published under the OSI certified Apache license. 
-OpenSearch includes for free cross-cluster replication, LDAP/OpenID/SAML 
+OpenSearch includes free cross-cluster replication, LDAP/OpenID/SAML 
 authentication, IP filtering, configurable retention period, anomaly detection, 
-tableau connector, or machine learning features whereas those features are 
+tableau connector, and machine learning features whereas those features are 
 non-free with ElasticSearch and would require a subscription.
 
 ### Documentation

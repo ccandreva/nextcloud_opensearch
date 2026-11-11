@@ -8,6 +8,12 @@
 
 Extension to allow the _Full text search_ app to use OpenSearch as a backend.
 
+OpenSearch was forked from ElasticSearch in 2021 due to a change in their license. 
+OpenSearch is published under the OSI certified Apache license. 
+OpenSearch includes free cross-cluster replication, LDAP/OpenID/SAML 
+authentication, IP filtering, configurable retention period, anomaly detection, 
+tableau connector, and machine learning features whereas those features are 
+non-free with ElasticSearch and would require a subscription.
 ]]>
 	</description>
 	<version>34.0.0-dev.1</version>
