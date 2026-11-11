@@ -16,7 +16,7 @@ tableau connector, and machine learning features whereas those features are
 non-free with ElasticSearch and would require a subscription.
 ]]>
 	</description>
-	<version>34.0.0-dev.1</version>
+	<version>34.0.0-dev.2</version>
 	<licence>AGPL-3.0-only</licence>
 	<author>Chris Candreva (forked from Armin Felder, forked from Maxence Lange)</author>
 	<namespace>FullTextSearch_OpenSearch</namespace>

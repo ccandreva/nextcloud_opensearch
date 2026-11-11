@@ -100,6 +100,11 @@ appstore: clean composer
 	--exclude=/.travis.yml \
 	--exclude=/Makefile \
         --exclude=/screenshots \
+        --exclude=/nbproject \
+        --exclude=/AGENTS.md \
+        --exclude=/scoper.inc.php \
+        --exclude=/lib-vendor-organizer.php \
+        --exclude=/phpunit.xml \
 	./ $(sign_dir)/$(package_name)
 	tar -czf $(build_dir)/$(package_name).tar.gz \
 		-C $(sign_dir) $(package_name)
