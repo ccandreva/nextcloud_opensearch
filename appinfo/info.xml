@@ -6,7 +6,7 @@
 	<summary>Index using OpenSearch</summary>
 	<description><![CDATA[
 
-Extension to the _Full text search_ app to communicate with OpenSearch.
+Extension to allow the _Full text search_ app to use OpenSearch as a backend.
 
 ]]>
 	</description>
@@ -21,7 +21,7 @@ Extension to the _Full text search_ app to communicate with OpenSearch.
 	<website>https://github.com/ccandreva/nextcloud_opensearch</website>
 	<bugs>https://github.com/ccandreva/nextcloud_opensearch/issues</bugs>
 	<repository>https://github.com/ccandreva/nextcloud_opensearch.git</repository>
-	<screenshot>https://raw.githubusercontent.com/ccandreva/nextcloud_opensearch/master/screenshots/0.3.0.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/ccandreva/nextcloud_opensearch/master/screenshots/Settings.png</screenshot>
 	<dependencies>
 		<nextcloud min-version="34" max-version="34"/>
 	</dependencies>
