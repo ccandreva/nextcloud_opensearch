@@ -9,7 +9,7 @@ cert_dir=$(HOME)/.nextcloud/certificates
 github_account=nextcloud
 release_account=nextcloud-releases
 branch=master
-version=31.0.0-dev.0
+version=34.0.0-dev.0
 since_tag=
 
 all: appstore
@@ -99,6 +99,7 @@ appstore: clean composer
 	--exclude=/.scrutinizer.yml \
 	--exclude=/.travis.yml \
 	--exclude=/Makefile \
+        --exclude=/screenshots \
 	./ $(sign_dir)/$(package_name)
 	tar -czf $(build_dir)/$(package_name).tar.gz \
 		-C $(sign_dir) $(package_name)
